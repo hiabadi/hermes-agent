@@ -1,0 +1,3 @@
+## 2026-04-28 - N+1 Query Bottleneck in SQLite Search
+**Learning:** In `hermes_state.py`, the `search_messages` function previously executed a separate SQL query for each matching message to retrieve its surrounding context (`id - 1`, `id`, `id + 1`). This N+1 query pattern caused significant lock overhead and slowed down search, especially when many matches were returned. SQLite parameter limits (999) must be respected when batching queries.
+**Action:** When retrieving related context for multiple items in SQLite, use a single batched query with an `IN` clause and chunk the requests (e.g., into chunks of 900) to respect SQLite parameter limits. Re-associate the results in memory to avoid the N+1 query overhead.
