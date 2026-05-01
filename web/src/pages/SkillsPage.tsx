@@ -217,8 +217,9 @@ export default function SkillsPage() {
               {search && (
                 <button
                   type="button"
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring rounded-sm"
                   onClick={() => setSearch("")}
+                  aria-label="Clear search"
                 >
                   <X className="h-3 w-3" />
                 </button>
