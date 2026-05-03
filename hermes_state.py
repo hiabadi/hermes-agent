@@ -1066,23 +1066,45 @@ class SessionDB:
             matches = [dict(row) for row in cursor.fetchall()]
 
         # Add surrounding context (1 message before + after each match).
-        # Done outside the lock so we don't hold it across N sequential queries.
-        for match in matches:
-            try:
+        # We batch the context queries to avoid N+1 query problem and lock contention.
+        if matches:
+            needed_ids = set()
+            for match in matches:
+                needed_ids.add(match["id"] - 1)
+                needed_ids.add(match["id"])
+                needed_ids.add(match["id"] + 1)
+
+            all_ctx = {}
+            if needed_ids:
+                needed_ids_list = list(needed_ids)
+                chunk_size = 900
                 with self._lock:
-                    ctx_cursor = self._conn.execute(
-                        """SELECT role, content FROM messages
-                           WHERE session_id = ? AND id >= ? - 1 AND id <= ? + 1
-                           ORDER BY id""",
-                        (match["session_id"], match["id"], match["id"]),
-                    )
-                    context_msgs = [
-                        {"role": r["role"], "content": (r["content"] or "")[:200]}
-                        for r in ctx_cursor.fetchall()
-                    ]
+                    for i in range(0, len(needed_ids_list), chunk_size):
+                        chunk = needed_ids_list[i:i + chunk_size]
+                        placeholders = ",".join("?" * len(chunk))
+                        try:
+                            q = (
+                                "SELECT id, session_id, role, content "
+                                f"FROM messages WHERE id IN ({placeholders})"
+                            )
+                            ctx_cursor = self._conn.execute(q, chunk)
+                            for r in ctx_cursor.fetchall():
+                                all_ctx[r["id"]] = r
+                        except Exception:
+                            pass
+
+            for match in matches:
+                context_msgs = []
+                for cid in (match["id"] - 1, match["id"], match["id"] + 1):
+                    row = all_ctx.get(cid)
+                    if row and row["session_id"] == match["session_id"]:
+                        context_msgs.append(
+                            {
+                                "role": row["role"],
+                                "content": (row["content"] or "")[:200],
+                            }
+                        )
                 match["context"] = context_msgs
-            except Exception:
-                match["context"] = []
 
         # Remove full content from result (snippet is enough, saves tokens)
         for match in matches:
