@@ -1,0 +1,21 @@
+
+> web@0.0.0 dev /app/web
+> vite
+
+
+  VITE v7.3.2  ready in 532 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: use --host to expose
+2:12:37 AM [vite] http proxy error: /api/status
+Error: connect ECONNREFUSED 127.0.0.1:9119
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+2:12:37 AM [vite] http proxy error: /api/sessions?limit=50&offset=0
+Error: connect ECONNREFUSED 127.0.0.1:9119
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+2:12:37 AM [vite] http proxy error: /api/dashboard/plugins
+Error: connect ECONNREFUSED 127.0.0.1:9119
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+2:12:37 AM [vite] http proxy error: /api/dashboard/themes
+Error: connect ECONNREFUSED 127.0.0.1:9119
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
