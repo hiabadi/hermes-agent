@@ -405,6 +405,7 @@ export default function SessionsPage() {
               type="button"
               className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
               onClick={() => setSearch("")}
+              aria-label={t.common?.clear ?? "Clear search"}
             >
               <X className="h-3 w-3" />
             </button>
