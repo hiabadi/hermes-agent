@@ -31,7 +31,7 @@ T = TypeVar("T")
 
 DEFAULT_DB_PATH = get_hermes_home() / "state.db"
 
-SCHEMA_VERSION = 6
+SCHEMA_VERSION = 7
 
 SCHEMA_SQL = """
 CREATE TABLE IF NOT EXISTS schema_version (
@@ -87,6 +87,10 @@ CREATE TABLE IF NOT EXISTS messages (
 CREATE INDEX IF NOT EXISTS idx_sessions_source ON sessions(source);
 CREATE INDEX IF NOT EXISTS idx_sessions_parent ON sessions(parent_session_id);
 CREATE INDEX IF NOT EXISTS idx_sessions_started ON sessions(started_at DESC);
+CREATE INDEX IF NOT EXISTS idx_sessions_started_parent
+    ON sessions(started_at DESC) WHERE parent_session_id IS NULL;
+CREATE INDEX IF NOT EXISTS idx_sessions_source_started_parent
+    ON sessions(source, started_at DESC) WHERE parent_session_id IS NULL;
 CREATE INDEX IF NOT EXISTS idx_messages_session ON messages(session_id, timestamp);
 """
 
@@ -329,6 +333,24 @@ class SessionDB:
                     except sqlite3.OperationalError:
                         pass  # Column already exists
                 cursor.execute("UPDATE schema_version SET version = 6")
+            if current_version < 7:
+                # v7: add partial indexes to optimize list_sessions_rich
+                try:
+                    cursor.execute(
+                        "CREATE INDEX IF NOT EXISTS "
+                        "idx_sessions_started_parent "
+                        "ON sessions(started_at DESC) "
+                        "WHERE parent_session_id IS NULL"
+                    )
+                    cursor.execute(
+                        "CREATE INDEX IF NOT EXISTS "
+                        "idx_sessions_source_started_parent "
+                        "ON sessions(source, started_at DESC) "
+                        "WHERE parent_session_id IS NULL"
+                    )
+                except sqlite3.OperationalError:
+                    pass
+                cursor.execute("UPDATE schema_version SET version = 7")
 
         # Unique title index — always ensure it exists (safe to run after migrations
         # since the title column is guaranteed to exist at this point)
