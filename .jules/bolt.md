@@ -1,0 +1,3 @@
+## 2024-05-17 - React.memo on LLM Message Components
+**Learning:** In applications where LLM responses are rendered within a long scrolling list (like `SessionsPage` using `MessageList`), the list components tend to re-render frequently due to parent state updates (e.g., search highlights, live token streaming updates). Wrapping heavy text renderers like `Markdown` in `React.memo` effectively isolates these re-renders since their props usually remain constant once the message finishes streaming.
+**Action:** Always check if heavy text/markdown renderer components in message lists are memoized. If not, wrapping them in `React.memo` provides a noticeable performance boost for long chat histories.
