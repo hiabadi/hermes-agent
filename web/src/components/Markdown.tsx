@@ -1,11 +1,17 @@
-import { useMemo } from "react";
+import { memo, useMemo } from "react";
 
 /**
  * Lightweight markdown renderer for LLM output.
  * Handles: code blocks, inline code, bold, italic, headers, links, lists, horizontal rules.
  * NOT a full CommonMark parser — optimized for typical assistant message patterns.
+ *
+ * ⚡ Bolt Optimization:
+ * Wrapped in React.memo() to prevent unnecessary re-renders of large LLM outputs
+ * when the parent MessageList/SessionPage updates (e.g. during live token streaming
+ * or scrolling). The useMemo on parseBlocks already prevents re-parsing, but memo()
+ * prevents the entire React tree reconciliation for this block if props haven't changed.
  */
-export function Markdown({ content, highlightTerms }: { content: string; highlightTerms?: string[] }) {
+export const Markdown = memo(function Markdown({ content, highlightTerms }: { content: string; highlightTerms?: string[] }) {
   const blocks = useMemo(() => parseBlocks(content), [content]);
 
   return (
@@ -15,7 +21,7 @@ export function Markdown({ content, highlightTerms }: { content: string; highlig
       ))}
     </div>
   );
-}
+});
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
