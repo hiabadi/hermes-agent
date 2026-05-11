@@ -13,11 +13,14 @@ const LEVELS = ["ALL", "DEBUG", "INFO", "WARNING", "ERROR"] as const;
 const COMPONENTS = ["all", "gateway", "agent", "tools", "cli", "cron"] as const;
 const LINE_COUNTS = [50, 100, 200, 500] as const;
 
+const ERROR_RE = /ERROR|CRITICAL|FATAL/i;
+const WARN_RE = /WARNING|WARN/i;
+const DEBUG_RE = /DEBUG/i;
+
 function classifyLine(line: string): "error" | "warning" | "info" | "debug" {
-  const upper = line.toUpperCase();
-  if (upper.includes("ERROR") || upper.includes("CRITICAL") || upper.includes("FATAL")) return "error";
-  if (upper.includes("WARNING") || upper.includes("WARN")) return "warning";
-  if (upper.includes("DEBUG")) return "debug";
+  if (ERROR_RE.test(line)) return "error";
+  if (WARN_RE.test(line)) return "warning";
+  if (DEBUG_RE.test(line)) return "debug";
   return "info";
 }
 
