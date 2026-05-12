@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import {
   ChevronDown,
   ChevronLeft,
@@ -114,9 +114,10 @@ function MessageBubble({ msg, highlight }: { msg: SessionMessage; highlight?: st
   })();
 
   // Split search query into terms for inline highlighting
-  const highlightTerms = isHit && highlight
+  // Memoized so we don't pass a new array reference down to Markdown on every render
+  const highlightTerms = useMemo(() => isHit && highlight
     ? highlight.split(/\s+/).filter(Boolean)
-    : undefined;
+    : undefined, [isHit, highlight]);
 
   return (
     <div className={`${style.bg} p-3 ${isHit ? "ring-1 ring-warning/40" : ""}`} data-search-hit={isHit || undefined}>
