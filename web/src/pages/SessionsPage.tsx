@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, useMemo, memo } from "react";
 import {
   ChevronDown,
   ChevronLeft,
@@ -92,7 +92,7 @@ function ToolCallBlock({ toolCall }: { toolCall: { id: string; function: { name:
   );
 }
 
-function MessageBubble({ msg, highlight }: { msg: SessionMessage; highlight?: string }) {
+const MessageBubble = memo(function MessageBubble({ msg, highlight }: { msg: SessionMessage; highlight?: string }) {
   const { t } = useI18n();
 
   const ROLE_STYLES: Record<string, { bg: string; text: string; label: string }> = {
@@ -105,18 +105,20 @@ function MessageBubble({ msg, highlight }: { msg: SessionMessage; highlight?: st
   const style = ROLE_STYLES[msg.role] ?? ROLE_STYLES.system;
   const label = msg.tool_name ? `${t.sessions.roles.tool}: ${msg.tool_name}` : style.label;
 
+  // Optimize: Memoize lowercased content to avoid recomputing on every keystroke. This prevents an O(N) lowercase operation across all messages while typing in the search bar.
+  const contentLower = useMemo(() => msg.content?.toLowerCase(), [msg.content]);
+
   // Check if any search term appears as a prefix of any word in content
-  const isHit = (() => {
-    if (!highlight || !msg.content) return false;
-    const content = msg.content.toLowerCase();
+  const isHit = useMemo(() => {
+    if (!highlight || !contentLower) return false;
     const terms = highlight.toLowerCase().split(/\s+/).filter(Boolean);
-    return terms.some((term) => content.includes(term));
-  })();
+    return terms.some((term) => contentLower.includes(term));
+  }, [highlight, contentLower]);
 
   // Split search query into terms for inline highlighting
-  const highlightTerms = isHit && highlight
+  const highlightTerms = useMemo(() => isHit && highlight
     ? highlight.split(/\s+/).filter(Boolean)
-    : undefined;
+    : undefined, [isHit, highlight]);
 
   return (
     <div className={`${style.bg} p-3 ${isHit ? "ring-1 ring-warning/40" : ""}`} data-search-hit={isHit || undefined}>
@@ -143,7 +145,7 @@ function MessageBubble({ msg, highlight }: { msg: SessionMessage; highlight?: st
       )}
     </div>
   );
-}
+});
 
 /** Message list with auto-scroll to first search hit. */
 function MessageList({ messages, highlight }: { messages: SessionMessage[]; highlight?: string }) {
