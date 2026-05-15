@@ -1,0 +1,3 @@
+## 2024-05-15 - Missing ARIA Labels on Icon-only Clear Search Buttons
+**Learning:** Icon-only buttons used for clearing search inputs across various pages (e.g., SkillsPage, ConfigPage, SessionsPage) were missing ARIA labels, making them inaccessible to screen readers. The application uses a robust i18n system (`t.common.clear`) that should be leveraged for these labels.
+**Action:** When adding or auditing icon-only interactive elements, ensure they have an appropriate `aria-label`. Always utilize the existing i18n translation keys (like `t.common.clear`) rather than hardcoding English strings to maintain accessibility and localization standards.
