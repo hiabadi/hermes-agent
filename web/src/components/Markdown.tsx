@@ -1,11 +1,11 @@
-import { useMemo } from "react";
+import { useMemo, memo } from "react";
 
 /**
  * Lightweight markdown renderer for LLM output.
  * Handles: code blocks, inline code, bold, italic, headers, links, lists, horizontal rules.
  * NOT a full CommonMark parser — optimized for typical assistant message patterns.
  */
-export function Markdown({ content, highlightTerms }: { content: string; highlightTerms?: string[] }) {
+export const Markdown = memo(function Markdown({ content, highlightTerms }: { content: string; highlightTerms?: string[] }) {
   const blocks = useMemo(() => parseBlocks(content), [content]);
 
   return (
@@ -15,7 +15,13 @@ export function Markdown({ content, highlightTerms }: { content: string; highlig
       ))}
     </div>
   );
-}
+}, (prev, next) => {
+  if (prev.content !== next.content) return false;
+  // Deep compare highlightTerms array
+  const prevTerms = prev.highlightTerms?.join(",") || "";
+  const nextTerms = next.highlightTerms?.join(",") || "";
+  return prevTerms === nextTerms;
+});
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
