@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, memo } from "react";
 import {
   ChevronDown,
   ChevronLeft,
@@ -92,7 +92,7 @@ function ToolCallBlock({ toolCall }: { toolCall: { id: string; function: { name:
   );
 }
 
-function MessageBubble({ msg, highlight }: { msg: SessionMessage; highlight?: string }) {
+const MessageBubble = memo(function MessageBubble({ msg, highlight }: { msg: SessionMessage; highlight?: string }) {
   const { t } = useI18n();
 
   const ROLE_STYLES: Record<string, { bg: string; text: string; label: string }> = {
@@ -143,10 +143,10 @@ function MessageBubble({ msg, highlight }: { msg: SessionMessage; highlight?: st
       )}
     </div>
   );
-}
+});
 
 /** Message list with auto-scroll to first search hit. */
-function MessageList({ messages, highlight }: { messages: SessionMessage[]; highlight?: string }) {
+const MessageList = memo(function MessageList({ messages, highlight }: { messages: SessionMessage[]; highlight?: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -168,7 +168,7 @@ function MessageList({ messages, highlight }: { messages: SessionMessage[]; high
       ))}
     </div>
   );
-}
+});
 
 function SessionRow({
   session,

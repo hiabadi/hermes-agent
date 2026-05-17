@@ -1,0 +1,3 @@
+## 2024-05-24 - Frontend Re-rendering Performance Optimization
+**Learning:** Found that `MessageList`, `MessageBubble`, and `Markdown` components in the React frontend (`web/src/pages/SessionsPage.tsx` and `web/src/components/Markdown.tsx`) are re-rendering unnecessarily during UI updates (e.g. typing in search, toggling session rows). Specifically, when viewing a session with many messages, any state change in the parent `SessionsPage` triggers a re-render of the entire deep message list and expensive Markdown parsing.
+**Action:** Use `React.memo` to wrap these components. For `Markdown`, use a custom comparison function because `highlightTerms` is passed as an array and needs deep/shallow string comparison to prevent referential equality checks from failing.
