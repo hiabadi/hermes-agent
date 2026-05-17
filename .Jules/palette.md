@@ -1,0 +1,3 @@
+## 2025-03-01 - Global UI Keyboard Focus Missing
+**Learning:** Found that the base `Button` component from the UI library (`web/src/components/ui/button.tsx`) was missing keyboard focus indicators (`focus-visible:ring-ring`). Because `Button` is used everywhere across the application, adding these focus styles centrally fixes accessibility for hundreds of interaction points across multiple pages at once.
+**Action:** When auditing applications for accessibility, always start by checking the base interactive components (Button, Input, Select, Checkbox) in the design system before checking individual pages. Fixing the root components yields an exponentially higher return on investment for usability.
