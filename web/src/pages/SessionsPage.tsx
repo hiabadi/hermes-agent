@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import {
   ChevronDown,
   ChevronLeft,
@@ -356,18 +356,24 @@ export default function SessionsPage() {
   };
 
   // Build snippet map from search results (session_id → snippet)
-  const snippetMap = new Map<string, string>();
-  if (searchResults) {
-    for (const r of searchResults) {
-      snippetMap.set(r.session_id, r.snippet);
+  // Memoized to prevent O(N) recalculations on every render during typing
+  const snippetMap = useMemo(() => {
+    const map = new Map<string, string>();
+    if (searchResults) {
+      for (const r of searchResults) {
+        map.set(r.session_id, r.snippet);
+      }
     }
-  }
+    return map;
+  }, [searchResults]);
 
   // When searching, filter sessions to those with FTS matches;
   // when not searching, show all sessions
-  const filtered = searchResults
-    ? sessions.filter((s) => snippetMap.has(s.id))
-    : sessions;
+  // Memoized to avoid array filtering on every render
+  const filtered = useMemo(() => {
+    if (!searchResults) return sessions;
+    return sessions.filter((s) => snippetMap.has(s.id));
+  }, [searchResults, sessions, snippetMap]);
 
   if (loading) {
     return (
