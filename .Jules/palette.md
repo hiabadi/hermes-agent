@@ -1,0 +1,3 @@
+## 2025-05-22 - Consistent Keyboard Focus on Core Components
+**Learning:** Found that the core `Button` component lacked visual keyboard focus states (`focus-visible`). When these aren't set at the design system level, keyboard users lose visibility across the entire application where the component is used.
+**Action:** Always verify keyboard accessibility (`focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring`) directly in the central design system components (e.g., `buttonVariants`) to ensure uniform keyboard navigability throughout the app.
