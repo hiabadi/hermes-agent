@@ -1,0 +1,3 @@
+## 2024-06-19 - Batched SQLite Deletions in Python
+**Learning:** SQLite has a parameter limit (SQLITE_MAX_VARIABLE_NUMBER, default 999 or 32766). When replacing N+1 queries with a single `IN (...)` query on large datasets, you must chunk the operations to avoid exceeding the parameter limit. Furthermore, doing this greatly reduces N+1 loop iteration bottlenecks when executing `DELETE` and `UPDATE` statements over sets of database records.
+**Action:** When replacing N+1 query patterns using `IN` clauses for lists of unknown or potentially large size, always implement a chunking strategy (e.g., max 500 parameters per batch) to ensure safety against parameter limits.
