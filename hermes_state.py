@@ -1222,13 +1222,17 @@ class SessionDB:
             if not session_ids:
                 return 0
 
+            session_ids_list = list(session_ids)
             # Orphan any sessions whose parent is about to be deleted
-            placeholders = ",".join("?" * len(session_ids))
-            conn.execute(
-                f"UPDATE sessions SET parent_session_id = NULL "
-                f"WHERE parent_session_id IN ({placeholders})",
-                list(session_ids),
-            )
+            # Chunk the operations to avoid exceeding SQLite's parameter limit
+            for i in range(0, len(session_ids_list), 500):
+                chunk = session_ids_list[i : i + 500]
+                placeholders = ",".join("?" * len(chunk))
+                conn.execute(
+                    f"UPDATE sessions SET parent_session_id = NULL "
+                    f"WHERE parent_session_id IN ({placeholders})",
+                    chunk,
+                )
 
             for sid in session_ids:
                 conn.execute("DELETE FROM messages WHERE session_id = ?", (sid,))
