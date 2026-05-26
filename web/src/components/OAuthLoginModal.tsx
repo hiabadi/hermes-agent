@@ -168,7 +168,7 @@ export function OAuthLoginModal({ provider, onClose, onSuccess, onError }: Props
         <button
           type="button"
           onClick={handleClose}
-          className="absolute right-3 top-3 text-muted-foreground hover:text-foreground transition-colors"
+          className="absolute right-3 top-3 text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-foreground/30 rounded-sm"
           aria-label={t.common.close}
         >
           <X className="h-5 w-5" />
