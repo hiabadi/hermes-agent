@@ -382,7 +382,7 @@ export default function ConfigPage() {
                 {searchQuery && (
                   <button
                     type="button"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-foreground/30 rounded-sm"
                     onClick={() => setSearchQuery("")}
                   >
                     <X className="h-3 w-3" />
@@ -402,7 +402,7 @@ export default function ConfigPage() {
                       setSearchQuery("");
                       setActiveCategory(cat);
                     }}
-                    className={`group flex items-center gap-2 px-2.5 py-1.5 text-left text-xs transition-colors cursor-pointer ${
+                    className={`group flex items-center gap-2 px-2.5 py-1.5 text-left text-xs transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-foreground/30 rounded-sm ${
                       isActive
                         ? "bg-primary/10 text-primary font-medium"
                         : "text-muted-foreground hover:text-foreground hover:bg-muted/50"

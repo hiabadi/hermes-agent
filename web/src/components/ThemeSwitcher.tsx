@@ -89,7 +89,7 @@ export function ThemeSwitcher() {
                 }}
                 className={cn(
                   "flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm transition-colors cursor-pointer",
-                  "hover:bg-foreground/10",
+                  "hover:bg-foreground/10 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:bg-foreground/10",
                   isActive ? "text-foreground" : "text-muted-foreground",
                 )}
               >

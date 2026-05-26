@@ -217,7 +217,7 @@ export default function SkillsPage() {
               {search && (
                 <button
                   type="button"
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-foreground/30 rounded-sm"
                   onClick={() => setSearch("")}
                 >
                   <X className="h-3 w-3" />
@@ -230,7 +230,7 @@ export default function SkillsPage() {
               <button
                 type="button"
                 onClick={() => { setView("skills"); setActiveCategory(null); setSearch(""); }}
-                className={`group flex items-center gap-2 px-2.5 py-1.5 text-left text-xs transition-colors cursor-pointer ${
+                className={`group flex items-center gap-2 px-2.5 py-1.5 text-left text-xs transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-foreground/30 rounded-sm ${
                   view === "skills" && !isSearching
                     ? "bg-primary/10 text-primary font-medium"
                     : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
@@ -249,7 +249,7 @@ export default function SkillsPage() {
                     key={key}
                     type="button"
                     onClick={() => setActiveCategory(activeCategory === key ? null : key)}
-                    className={`group flex items-center gap-2 px-2.5 py-1 pl-7 text-left text-[11px] transition-colors cursor-pointer ${
+                    className={`group flex items-center gap-2 px-2.5 py-1 pl-7 text-left text-[11px] transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-foreground/30 rounded-sm ${
                       isActive
                         ? "text-primary font-medium"
                         : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
@@ -266,7 +266,7 @@ export default function SkillsPage() {
               <button
                 type="button"
                 onClick={() => { setView("toolsets"); setSearch(""); }}
-                className={`group flex items-center gap-2 px-2.5 py-1.5 text-left text-xs transition-colors cursor-pointer ${
+                className={`group flex items-center gap-2 px-2.5 py-1.5 text-left text-xs transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-foreground/30 rounded-sm ${
                   view === "toolsets"
                     ? "bg-primary/10 text-primary font-medium"
                     : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
