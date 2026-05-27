@@ -1217,22 +1217,34 @@ class SessionDB:
                     "SELECT id FROM sessions WHERE started_at < ? AND ended_at IS NOT NULL",
                     (cutoff,),
                 )
-            session_ids = set(row["id"] for row in cursor.fetchall())
+            session_ids = list(set(row["id"] for row in cursor.fetchall()))
 
             if not session_ids:
                 return 0
 
-            # Orphan any sessions whose parent is about to be deleted
-            placeholders = ",".join("?" * len(session_ids))
-            conn.execute(
-                f"UPDATE sessions SET parent_session_id = NULL "
-                f"WHERE parent_session_id IN ({placeholders})",
-                list(session_ids),
-            )
+            # Process in chunks to avoid SQLite MAX_VARIABLE_NUMBER limit
+            # (default 999) using an efficient IN (...) clause.
+            chunk_size = 500
+            for i in range(0, len(session_ids), chunk_size):
+                chunk = session_ids[i:i + chunk_size]
+                placeholders = ",".join("?" * len(chunk))
 
-            for sid in session_ids:
-                conn.execute("DELETE FROM messages WHERE session_id = ?", (sid,))
-                conn.execute("DELETE FROM sessions WHERE id = ?", (sid,))
+                # Orphan any sessions whose parent is about to be deleted
+                conn.execute(
+                    f"UPDATE sessions SET parent_session_id = NULL "
+                    f"WHERE parent_session_id IN ({placeholders})",
+                    chunk,
+                )
+                conn.execute(
+                    f"DELETE FROM messages "
+                    f"WHERE session_id IN ({placeholders})",
+                    chunk
+                )
+                conn.execute(
+                    f"DELETE FROM sessions WHERE id IN ({placeholders})",
+                    chunk
+                )
+
             return len(session_ids)
 
         return self._execute_write(_do)
