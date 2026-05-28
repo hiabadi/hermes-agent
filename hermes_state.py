@@ -1153,12 +1153,36 @@ class SessionDB:
         Export all sessions (with messages) as a list of dicts.
         Suitable for writing to a JSONL file for backup/analysis.
         """
+        # perf: avoid N+1 queries — chunked IN clause is O(N/500) queries (was N+1)
         sessions = self.search_sessions(source=source, limit=100000)
-        results = []
-        for session in sessions:
-            messages = self.get_messages(session["id"])
-            results.append({**session, "messages": messages})
-        return results
+        if not sessions:
+            return []
+
+        session_map = {s["id"]: {**s, "messages": []} for s in sessions}
+        session_ids = list(session_map.keys())
+
+        chunk_size = 500
+        for i in range(0, len(session_ids), chunk_size):
+            chunk = session_ids[i:i + chunk_size]
+            placeholders = ",".join("?" for _ in chunk)
+            with self._lock:
+                cursor = self._conn.execute(
+                    f"SELECT * FROM messages WHERE session_id IN ({placeholders}) ORDER BY timestamp, id",
+                    chunk
+                )
+                rows = cursor.fetchall()
+
+            for row in rows:
+                msg = dict(row)
+                if msg.get("tool_calls"):
+                    try:
+                        msg["tool_calls"] = json.loads(msg["tool_calls"])
+                    except (json.JSONDecodeError, TypeError):
+                        logger.warning("Failed to deserialize tool_calls in export_all, falling back to []")
+                        msg["tool_calls"] = []
+                session_map[msg["session_id"]]["messages"].append(msg)
+
+        return [session_map[s["id"]] for s in sessions]
 
     def clear_messages(self, session_id: str) -> None:
         """Delete all messages for a session and reset its counters."""
