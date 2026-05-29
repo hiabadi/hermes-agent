@@ -1154,10 +1154,35 @@ class SessionDB:
         Suitable for writing to a JSONL file for backup/analysis.
         """
         sessions = self.search_sessions(source=source, limit=100000)
+        session_ids = [s["id"] for s in sessions]
+
+        messages_by_session = {sid: [] for sid in session_ids}
+
+        # perf: avoid N+1 queries — batch fetch messages (was one query per session)
+        with self._lock:
+            for i in range(0, len(session_ids), 500):
+                chunk = session_ids[i:i + 500]
+                placeholders = ",".join("?" for _ in chunk)
+                cursor = self._conn.execute(
+                    f"SELECT * FROM messages WHERE session_id IN ({placeholders}) ORDER BY timestamp, id",
+                    chunk
+                )
+
+                for row in cursor.fetchall():
+                    msg = dict(row)
+                    if msg.get("tool_calls"):
+                        try:
+                            msg["tool_calls"] = json.loads(msg["tool_calls"])
+                        except (json.JSONDecodeError, TypeError):
+                            logger.warning(
+                                "Failed to deserialize tool_calls in export_all, falling back to []"
+                            )
+                            msg["tool_calls"] = []
+                    messages_by_session[msg["session_id"]].append(msg)
+
         results = []
         for session in sessions:
-            messages = self.get_messages(session["id"])
-            results.append({**session, "messages": messages})
+            results.append({**session, "messages": messages_by_session[session["id"]]})
         return results
 
     def clear_messages(self, session_id: str) -> None:
