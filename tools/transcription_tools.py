@@ -2,12 +2,15 @@
 """
 Transcription Tools Module
 
-Provides speech-to-text transcription with three providers:
+Provides speech-to-text transcription with five providers:
 
-  - **local** (default, free) — faster-whisper running locally, no API key needed.
+  - **local** (default, free) — faster-whisper running locally.
     Auto-downloads the model (~150 MB for ``base``) on first use.
+  - **local_command** (free) — run an arbitrary local command.
+    Configured via ``HERMES_LOCAL_STT_COMMAND``.
   - **groq** (free tier) — Groq Whisper API, requires ``GROQ_API_KEY``.
-  - **openai** (paid) — OpenAI Whisper API, requires ``VOICE_TOOLS_OPENAI_KEY``.
+  - **openai** (paid) — OpenAI Whisper API, requires keys.
+  - **mistral** (paid) — Mistral API, requires ``MISTRAL_API_KEY``.
 
 Used by the messaging gateway to automatically transcribe voice messages
 sent by users on Telegram, Discord, WhatsApp, Slack, and Signal.
@@ -565,7 +568,7 @@ def transcribe_audio(file_path: str, model: Optional[str] = None) -> Dict[str, A
 
     Provider priority:
       1. User config (``stt.provider`` in config.yaml)
-      2. Auto-detect: local faster-whisper (free) > Groq (free tier) > OpenAI (paid)
+      2. Auto-detect: local > local_command > groq > openai > mistral
 
     Args:
         file_path: Absolute path to the audio file to transcribe.
