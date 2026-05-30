@@ -195,23 +195,3 @@ class BrowserbaseProvider(CloudBrowserProvider):
             logger.error("Exception closing Browserbase session %s: %s", session_id, e)
             return False
 
-    def emergency_cleanup(self, session_id: str) -> None:
-        config = self._get_config_or_none()
-        if config is None:
-            logger.warning("Cannot emergency-cleanup Browserbase session %s — missing credentials", session_id)
-            return
-        try:
-            requests.post(
-                f"{config['base_url']}/v1/sessions/{session_id}",
-                headers={
-                    "X-BB-API-Key": config["api_key"],
-                    "Content-Type": "application/json",
-                },
-                json={
-                    "projectId": config["project_id"],
-                    "status": "REQUEST_RELEASE",
-                },
-                timeout=5,
-            )
-        except Exception as e:
-            logger.debug("Emergency cleanup failed for Browserbase session %s: %s", session_id, e)

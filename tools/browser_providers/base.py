@@ -50,10 +50,3 @@ class CloudBrowserProvider(ABC):
         Returns True on success, False on failure.  Should not raise.
         """
 
-    @abstractmethod
-    def emergency_cleanup(self, session_id: str) -> None:
-        """Best-effort session teardown during process exit.
-
-        Called from atexit / signal handlers.  Must tolerate missing
-        credentials, network errors, etc. — log and move on.
-        """
