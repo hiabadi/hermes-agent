@@ -199,17 +199,3 @@ class BrowserUseProvider(CloudBrowserProvider):
             logger.error("Exception closing Browser Use session %s: %s", session_id, e)
             return False
 
-    def emergency_cleanup(self, session_id: str) -> None:
-        config = self._get_config_or_none()
-        if config is None:
-            logger.warning("Cannot emergency-cleanup Browser Use session %s — missing credentials", session_id)
-            return
-        try:
-            requests.patch(
-                f"{config['base_url']}/browsers/{session_id}",
-                headers=self._headers(config),
-                json={"action": "stop"},
-                timeout=5,
-            )
-        except Exception as e:
-            logger.debug("Emergency cleanup failed for Browser Use session %s: %s", session_id, e)
