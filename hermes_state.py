@@ -1230,9 +1230,20 @@ class SessionDB:
                 list(session_ids),
             )
 
-            for sid in session_ids:
-                conn.execute("DELETE FROM messages WHERE session_id = ?", (sid,))
-                conn.execute("DELETE FROM sessions WHERE id = ?", (sid,))
+            # perf: batch delete to avoid N+1 queries during pruning
+            session_ids_list = list(session_ids)
+            for i in range(0, len(session_ids_list), 500):
+                chunk = session_ids_list[i:i + 500]
+                placeholders = ",".join("?" * len(chunk))
+                conn.execute(
+                    f"DELETE FROM messages "
+                    f"WHERE session_id IN ({placeholders})",
+                    chunk,
+                )
+                conn.execute(
+                    f"DELETE FROM sessions WHERE id IN ({placeholders})", chunk
+                )
+
             return len(session_ids)
 
         return self._execute_write(_do)
