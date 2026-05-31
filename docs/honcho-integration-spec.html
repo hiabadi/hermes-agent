@@ -522,27 +522,27 @@ flowchart TD
 
   <p>This is a one-line change but foundational. Without it, Honcho's AI peer representation stays empty regardless of what the agent says.</p>
 
-  <h3>Part B: seedAiIdentity()</h3>
-  <pre><code><span class="kw">async function</span> <span class="key">seedAiIdentity</span>(
-  session: HonchoSession,
-  agentPeer: Peer,
-  content: <span class="str">string</span>,
-  source: <span class="str">string</span>
-): Promise&lt;<span class="kw">boolean</span>&gt; {
-  <span class="kw">const</span> wrapped = [
-    <span class="str">`&lt;ai_identity_seed&gt;`</span>,
-    <span class="str">`&lt;source&gt;${source}&lt;/source&gt;`</span>,
-    <span class="str">``</span>,
-    content.trim(),
-    <span class="str">`&lt;/ai_identity_seed&gt;`</span>,
-  ].join(<span class="str">"\n"</span>);
+  <h3>Part B: seed_ai_identity()</h3>
+  <pre><code><span class="kw">def</span> <span class="key">seed_ai_identity</span>(
+  session_key: <span class="str">str</span>,
+  content: <span class="str">str</span>,
+  source: <span class="str">str</span> = <span class="str">"manual"</span>
+) -&gt; <span class="kw">bool</span>:
+  wrapped = [
+    <span class="str">"&lt;ai_identity_seed&gt;"</span>,
+    <span class="str">f"&lt;source&gt;{source}&lt;/source&gt;"</span>,
+    <span class="str">""</span>,
+    content.strip(),
+    <span class="str">"&lt;/ai_identity_seed&gt;"</span>,
+  ]
 
-  <span class="kw">await</span> agentPeer.addMessage(<span class="str">"assistant"</span>, wrapped);
-  <span class="kw">return true</span>;
-}</code></pre>
+  <span class="cm"># Implementation writes wrapped message to session cache</span>
+  <span class="cm"># and then to Honcho...</span>
+  <span class="kw">return True</span>
+</code></pre>
 
   <h3>Part C: migrate agent files at setup</h3>
-  <p>During <code>openclaw honcho setup</code>, upload agent-self files (SOUL.md, IDENTITY.md, AGENTS.md, BOOTSTRAP.md) to the agent peer using <code>seedAiIdentity()</code> instead of <code>session.uploadFile()</code>. This routes the content through Honcho's observation pipeline rather than the file store.</p>
+  <p>During <code>openclaw honcho setup</code>, upload agent-self files (SOUL.md, IDENTITY.md, AGENTS.md, BOOTSTRAP.md) to the agent peer using <code>seed_ai_identity()</code> instead of <code>session.uploadFile()</code>. This routes the content through Honcho's observation pipeline rather than the file store.</p>
 
   <h3>Part D: AI peer name in identity</h3>
   <p>When the agent has a configured name (non-default), inject it into the agent's self-identity prefix. In OpenClaw this means adding to the injected system prompt section:</p>
@@ -636,7 +636,7 @@ openclaw honcho map                   <span class="cm"># no-arg = list mappings<
     <li class="todo"><strong>observe_me=True for agent peer</strong> — one-line change in <code>session.addPeers()</code> config for agent peer. (<a href="#spec-identity">spec</a>)</li>
     <li class="todo"><strong>Dynamic reasoning level</strong> — add <code>dynamicReasoningLevel()</code> helper; apply in <code>honcho_recall</code> and <code>honcho_analyze</code>. Add <code>dialecticReasoningLevel</code> to config schema. (<a href="#spec-reasoning">spec</a>)</li>
     <li class="todo"><strong>Per-peer memory modes</strong> — add <code>userMemoryMode</code> / <code>agentMemoryMode</code> to config; gate Honcho sync and local writes accordingly. (<a href="#spec-modes">spec</a>)</li>
-    <li class="todo"><strong>seedAiIdentity()</strong> — add helper; apply during setup migration for SOUL.md / IDENTITY.md instead of <code>session.uploadFile()</code>. (<a href="#spec-identity">spec</a>)</li>
+    <li class="todo"><strong>seed_ai_identity()</strong> — add helper; apply during setup migration for SOUL.md / IDENTITY.md instead of <code>session.uploadFile()</code>. (<a href="#spec-identity">spec</a>)</li>
     <li class="todo"><strong>Session naming strategies</strong> — add <code>sessionStrategy</code>, <code>sessions</code> map, <code>sessionPeerPrefix</code> to config; implement resolution function. (<a href="#spec-sessions">spec</a>)</li>
     <li class="todo"><strong>CLI surface injection</strong> — append command reference to <code>before_prompt_build</code> return value when Honcho is active. (<a href="#spec-cli">spec</a>)</li>
     <li class="todo"><strong>honcho identity subcommand</strong> — add <code>openclaw honcho identity</code> CLI command. (<a href="#spec-identity">spec</a>)</li>
@@ -661,7 +661,7 @@ openclaw honcho map                   <span class="cm"># no-arg = list mappings<
     <li class="todo">Message capture at turn end with <code>lastSavedIndex</code> dedup</li>
     <li class="todo">Platform metadata stripping before Honcho storage</li>
     <li class="todo">Async prefetch from day one — do not implement blocking context injection</li>
-    <li class="todo">Legacy file migration at first activation (USER.md → owner peer, SOUL.md → <code>seedAiIdentity()</code>)</li>
+    <li class="todo">Legacy file migration at first activation (USER.md → owner peer, SOUL.md → <code>seed_ai_identity()</code>)</li>
   </ul>
 
   <h3>Phase 2 — configuration</h3>
