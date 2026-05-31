@@ -98,6 +98,87 @@ class TestMergeMode:
         assert len(items) == 2
 
 
+    def test_empty_id_skipped_during_merge(self):
+        store = TodoStore()
+        store.write([{"id": "1", "content": "First", "status": "pending"}])
+        store.write(
+            [{"id": " ", "content": "No ID", "status": "pending"}],
+            merge=True,
+        )
+        items = store.read()
+        assert len(items) == 1
+        assert items[0]["id"] == "1"
+
+    def test_invalid_status_ignored_during_merge(self):
+        store = TodoStore()
+        store.write([{"id": "1", "content": "Original", "status": "pending"}])
+        store.write(
+            [{"id": "1", "status": "invalid_status"}],
+            merge=True,
+        )
+        items = store.read()
+        assert len(items) == 1
+        assert items[0]["status"] == "pending"
+
+    def test_missing_fields_during_merge_ignored(self):
+        store = TodoStore()
+        store.write([{"id": "1", "content": "Original", "status": "pending"}])
+        store.write(
+            [{"id": "1"}], # No content or status
+            merge=True,
+        )
+        items = store.read()
+        assert len(items) == 1
+        assert items[0]["content"] == "Original"
+        assert items[0]["status"] == "pending"
+
+    def test_merge_appends_new_and_validates(self):
+        store = TodoStore()
+        store.write([{"id": "1", "content": "First", "status": "pending"}])
+        store.write(
+            [{"id": "2", "status": "invalid"}], # New item without content, invalid status
+            merge=True,
+        )
+        items = store.read()
+        assert len(items) == 2
+        assert items[1]["id"] == "2"
+        assert items[1]["content"] == "(no description)"
+        assert items[1]["status"] == "pending"
+
+
+class TestValidation:
+    def test_validate_missing_and_empty_fields(self):
+        store = TodoStore()
+        store.write([{}]) # Empty item
+        items = store.read()
+        assert len(items) == 1
+        assert items[0]["id"] == "?"
+        assert items[0]["content"] == "(no description)"
+        assert items[0]["status"] == "pending"
+
+    def test_validate_invalid_status_falls_back_to_pending(self):
+        store = TodoStore()
+        store.write([{"id": "1", "content": "Task", "status": "done"}])
+        items = store.read()
+        assert items[0]["status"] == "pending"
+
+    def test_validate_whitespace_fields(self):
+        store = TodoStore()
+        store.write([{"id": "   ", "content": " \n\t ", "status": "   "}])
+        items = store.read()
+        assert items[0]["id"] == "?"
+        assert items[0]["content"] == "(no description)"
+        assert items[0]["status"] == "pending"
+
+    def test_validate_non_string_fields(self):
+        store = TodoStore()
+        store.write([{"id": 123, "content": ["not", "string"], "status": None}])
+        items = store.read()
+        assert items[0]["id"] == "123"
+        assert items[0]["content"] == "['not', 'string']"
+        assert items[0]["status"] == "pending"
+
+
 class TestTodoToolFunction:
     def test_read_mode(self):
         store = TodoStore()
