@@ -225,30 +225,30 @@ await session.addPeers([
 
 One-line change. Foundational. Without it, the AI peer representation stays empty regardless of what the agent says.
 
-### Part B: seedAiIdentity()
+### Part B: seed_ai_identity()
 
-```typescript
-async function seedAiIdentity(
-  agentPeer: Peer,
-  content: string,
-  source: string
-): Promise<boolean> {
-  const wrapped = [
-    `<ai_identity_seed>`,
-    `<source>${source}</source>`,
-    ``,
-    content.trim(),
-    `</ai_identity_seed>`,
-  ].join("\n");
+```python
+def seed_ai_identity(
+  session_key: str,
+  content: str,
+  source: str = "manual"
+) -> bool:
+  wrapped = [
+      "<ai_identity_seed>",
+      f"<source>{source}</source>",
+      "",
+      content.strip(),
+      "</ai_identity_seed>",
+  ]
 
-  await agentPeer.addMessage("assistant", wrapped);
-  return true;
-}
+  # Implementation writes wrapped message to session cache
+  # and then to Honcho...
+  return True
 ```
 
 ### Part C: migrate agent files at setup
 
-During `honcho setup`, upload agent-self files (SOUL.md, IDENTITY.md, AGENTS.md) to the agent peer via `seedAiIdentity()` instead of `session.uploadFile()`. This routes content through Honcho's observation pipeline.
+During `honcho setup`, upload agent-self files (SOUL.md, IDENTITY.md, AGENTS.md) to the agent peer via `seed_ai_identity()` instead of `session.uploadFile()`. This routes content through Honcho's observation pipeline.
 
 ### Part D: AI peer name in identity
 
@@ -339,7 +339,7 @@ Ordered by impact:
 - [ ] **observe_me=True for agent peer** — one-line change in `session.addPeers()`
 - [ ] **Dynamic reasoning level** — add helper; apply in `honcho_recall` and `honcho_analyze`; add `dialecticReasoningLevel` to config
 - [ ] **Per-peer memory modes** — add `userMemoryMode` / `agentMemoryMode` to config; gate Honcho sync and local writes
-- [ ] **seedAiIdentity()** — add helper; use during setup migration for SOUL.md / IDENTITY.md
+- [ ] **seed_ai_identity()** — add helper; use during setup migration for SOUL.md / IDENTITY.md
 - [ ] **Session naming strategies** — add `sessionStrategy`, `sessions` map, `sessionPeerPrefix`
 - [ ] **CLI surface injection** — append command reference to `before_prompt_build` return value
 - [ ] **honcho identity subcommand** — seed from file or `--show` current representation
@@ -360,7 +360,7 @@ Greenfield integration. Start from openclaw-honcho's architecture and apply all 
 - [ ] Message capture at turn end with `lastSavedIndex` dedup
 - [ ] Platform metadata stripping before Honcho storage
 - [ ] Async prefetch from day one — do not implement blocking context injection
-- [ ] Legacy file migration at first activation (USER.md → owner peer, SOUL.md → `seedAiIdentity()`)
+- [ ] Legacy file migration at first activation (USER.md → owner peer, SOUL.md → `seed_ai_identity()`)
 
 ### Phase 2 — configuration
 
