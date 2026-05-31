@@ -30,10 +30,10 @@ export function AutoField({
     return (
       <div className="flex items-center justify-between gap-4">
         <div className="flex flex-col gap-0.5">
-          <Label className="text-sm">{label}</Label>
+          <Label htmlFor={schemaKey} className="text-sm">{label}</Label>
           <FieldHint schema={schema} schemaKey={schemaKey} />
         </div>
-        <Switch checked={!!value} onCheckedChange={onChange} />
+        <Switch id={schemaKey} checked={!!value} onCheckedChange={onChange} />
       </div>
     );
   }
@@ -42,9 +42,9 @@ export function AutoField({
     const options = (schema.options as string[]) ?? [];
     return (
       <div className="grid gap-1.5">
-        <Label className="text-sm">{label}</Label>
+        <Label htmlFor={schemaKey} className="text-sm">{label}</Label>
         <FieldHint schema={schema} schemaKey={schemaKey} />
-        <Select value={String(value ?? "")} onValueChange={(v) => onChange(v)}>
+        <Select id={schemaKey} value={String(value ?? "")} onValueChange={(v) => onChange(v)}>
           {options.map((opt) => (
             <SelectOption key={opt} value={opt}>
               {opt || "(none)"}
@@ -58,9 +58,10 @@ export function AutoField({
   if (schema.type === "number") {
     return (
       <div className="grid gap-1.5">
-        <Label className="text-sm">{label}</Label>
+        <Label htmlFor={schemaKey} className="text-sm">{label}</Label>
         <FieldHint schema={schema} schemaKey={schemaKey} />
         <Input
+          id={schemaKey}
           type="number"
           value={value === undefined || value === null ? "" : String(value)}
           onChange={(e) => {
@@ -82,9 +83,10 @@ export function AutoField({
   if (schema.type === "text") {
     return (
       <div className="grid gap-1.5">
-        <Label className="text-sm">{label}</Label>
+        <Label htmlFor={schemaKey} className="text-sm">{label}</Label>
         <FieldHint schema={schema} schemaKey={schemaKey} />
         <textarea
+          id={schemaKey}
           className="flex min-h-[80px] w-full border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
           value={String(value ?? "")}
           onChange={(e) => onChange(e.target.value)}
@@ -96,9 +98,10 @@ export function AutoField({
   if (schema.type === "list") {
     return (
       <div className="grid gap-1.5">
-        <Label className="text-sm">{label}</Label>
+        <Label htmlFor={schemaKey} className="text-sm">{label}</Label>
         <FieldHint schema={schema} schemaKey={schemaKey} />
         <Input
+          id={schemaKey}
           value={Array.isArray(value) ? value.join(", ") : String(value ?? "")}
           onChange={(e) =>
             onChange(
@@ -118,12 +121,13 @@ export function AutoField({
     const obj = value as Record<string, unknown>;
     return (
       <div className="grid gap-3 border border-border p-3">
-        <Label className="text-xs font-medium">{label}</Label>
+        <div className="text-xs font-medium">{label}</div>
         <FieldHint schema={schema} schemaKey={schemaKey} />
         {Object.entries(obj).map(([subKey, subVal]) => (
           <div key={subKey} className="grid gap-1">
-            <Label className="text-xs text-muted-foreground">{subKey}</Label>
+            <Label htmlFor={`${schemaKey}.${subKey}`} className="text-xs text-muted-foreground">{subKey}</Label>
             <Input
+              id={`${schemaKey}.${subKey}`}
               value={String(subVal ?? "")}
               onChange={(e) => onChange({ ...obj, [subKey]: e.target.value })}
               className="text-xs"
@@ -136,9 +140,9 @@ export function AutoField({
 
   return (
     <div className="grid gap-1.5">
-      <Label className="text-sm">{label}</Label>
+      <Label htmlFor={schemaKey} className="text-sm">{label}</Label>
       <FieldHint schema={schema} schemaKey={schemaKey} />
-      <Input value={String(value ?? "")} onChange={(e) => onChange(e.target.value)} />
+      <Input id={schemaKey} value={String(value ?? "")} onChange={(e) => onChange(e.target.value)} />
     </div>
   );
 }
