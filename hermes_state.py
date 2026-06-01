@@ -748,6 +748,7 @@ class SessionDB:
             params.extend(exclude_sources)
 
         where_sql = f"WHERE {' AND '.join(where_clauses)}" if where_clauses else ""
+        # perf: paginate sessions before evaluating expensive preview/timestamp
         query = f"""
             SELECT s.*,
                 COALESCE(
@@ -761,10 +762,13 @@ class SessionDB:
                     (SELECT MAX(m2.timestamp) FROM messages m2 WHERE m2.session_id = s.id),
                     s.started_at
                 ) AS last_active
-            FROM sessions s
-            {where_sql}
+            FROM (
+                SELECT * FROM sessions s
+                {where_sql}
+                ORDER BY s.started_at DESC
+                LIMIT ? OFFSET ?
+            ) s
             ORDER BY s.started_at DESC
-            LIMIT ? OFFSET ?
         """
         params.extend([limit, offset])
         with self._lock:
