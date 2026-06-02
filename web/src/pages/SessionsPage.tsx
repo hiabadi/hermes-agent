@@ -75,7 +75,7 @@ function ToolCallBlock({ toolCall }: { toolCall: { id: string; function: { name:
     <div className="mt-2 border border-warning/20 bg-warning/5">
       <button
         type="button"
-        className="flex w-full items-center gap-2 px-3 py-2 text-xs text-warning cursor-pointer hover:bg-warning/10 transition-colors"
+        className="flex w-full items-center gap-2 px-3 py-2 text-xs text-warning cursor-pointer hover:bg-warning/10 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
         onClick={() => setOpen(!open)}
         aria-label={`${open ? t.common.collapse : t.common.expand} tool call ${toolCall.function.name}`}
       >
@@ -403,7 +403,7 @@ export default function SessionsPage() {
           {search && (
             <button
               type="button"
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
               onClick={() => setSearch("")}
             >
               <X className="h-3 w-3" />
