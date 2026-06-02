@@ -4111,8 +4111,13 @@ class TestFallbackSetsOAuthFlag:
 class TestMemoryNudgeCounterPersistence:
     """_turns_since_memory must persist across run_conversation calls."""
 
-    def test_counters_initialized_in_init(self):
+    @patch("agent.auxiliary_client.resolve_provider_client")
+    def test_counters_initialized_in_init(self, mock_resolve):
         """Counters must exist on the agent after __init__."""
+        mock_client = MagicMock()
+        mock_client.api_key = "test-key"
+        mock_client.base_url = "http://test"
+        mock_resolve.return_value = (mock_client, "test")
         with patch("run_agent.get_tool_definitions", return_value=[]):
             a = AIAgent(
                 model="test", api_key="test-key", provider="openrouter",
@@ -4121,6 +4126,7 @@ class TestMemoryNudgeCounterPersistence:
         assert hasattr(a, "_turns_since_memory")
         assert hasattr(a, "_iters_since_skill")
         assert a._turns_since_memory == 0
+
         assert a._iters_since_skill == 0
 
     def test_counters_not_reset_in_preamble(self):
