@@ -1222,17 +1222,25 @@ class SessionDB:
             if not session_ids:
                 return 0
 
-            # Orphan any sessions whose parent is about to be deleted
-            placeholders = ",".join("?" * len(session_ids))
-            conn.execute(
-                f"UPDATE sessions SET parent_session_id = NULL "
-                f"WHERE parent_session_id IN ({placeholders})",
-                list(session_ids),
-            )
+            session_ids_list = list(session_ids)
+            # perf: avoid N+1 queries — chunked IN clause is faster than 1-by-1 deletes
+            for i in range(0, len(session_ids_list), 500):
+                chunk = session_ids_list[i : i + 500]
+                placeholders = ",".join("?" * len(chunk))
 
-            for sid in session_ids:
-                conn.execute("DELETE FROM messages WHERE session_id = ?", (sid,))
-                conn.execute("DELETE FROM sessions WHERE id = ?", (sid,))
+                # Orphan any sessions whose parent is about to be deleted
+                conn.execute(
+                    f"UPDATE sessions SET parent_session_id = NULL "
+                    f"WHERE parent_session_id IN ({placeholders})",
+                    chunk,
+                )
+
+                conn.execute(
+                    f"DELETE FROM messages WHERE session_id IN ({placeholders})", chunk
+                )
+                conn.execute(
+                    f"DELETE FROM sessions WHERE id IN ({placeholders})", chunk
+                )
             return len(session_ids)
 
         return self._execute_write(_do)
