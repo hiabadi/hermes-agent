@@ -99,7 +99,6 @@ class TestValidateAudioFile:
         assert _validate_audio_file(str(f)) is None
 
     def test_too_large(self, tmp_path):
-        import stat as stat_mod
         f = tmp_path / "big.ogg"
         f.write_bytes(b"x")
         from tools.transcription_tools import _validate_audio_file, MAX_FILE_SIZE
