@@ -3,7 +3,6 @@
 import json
 from unittest.mock import call, patch
 
-import pytest
 
 from model_tools import (
     handle_function_call,
@@ -18,6 +17,7 @@ from model_tools import (
 # =========================================================================
 # handle_function_call
 # =========================================================================
+
 
 class TestHandleFunctionCall:
     def test_agent_loop_tool_returns_error(self):
@@ -76,8 +76,110 @@ class TestHandleFunctionCall:
 
 
 # =========================================================================
+# Type coercion
+# =========================================================================
+
+
+class TestCoerceToolArgs:
+    @patch("model_tools.registry.get_schema")
+    def test_coerce_tool_args(self, mock_get_schema):
+        from model_tools import coerce_tool_args
+
+        mock_get_schema.return_value = {
+            "parameters": {
+                "properties": {
+                    "count": {"type": "integer"},
+                    "count_invalid": {"type": "integer"},
+                    "count_float": {"type": "integer"},
+                    "score": {"type": "number"},
+                    "score_inf": {"type": "number"},
+                    "score_nan": {"type": "number"},
+                    "flag": {"type": "boolean"},
+                    "flag_false": {"type": "boolean"},
+                    "flag_invalid": {"type": "boolean"},
+                    "name": {"type": "string"},
+                    "mixed": {"type": ["boolean", "integer"]},
+                    "mixed_invalid": {"type": ["boolean", "integer"]},
+                    "no_type": {},
+                }
+            }
+        }
+
+        args = {
+            "count": "10",
+            "count_invalid": "not a number",
+            "count_float": "42.5",
+            "score": "3.14",
+            "score_inf": "inf",
+            "score_nan": "nan",
+            "flag": "  TRUE  ",
+            "flag_false": "False",
+            "flag_invalid": "not a boolean",
+            "name": "alice",
+            "mixed": "42",
+            "mixed_invalid": "not_bool",
+            "unknown": "100",
+            "no_type": "1",
+            "already_int": 5,
+        }
+
+        result = coerce_tool_args("fake_tool", args)
+
+        assert result["count"] == 10
+        assert result["count_invalid"] == "not a number"
+        assert result["count_float"] == "42.5"
+        assert result["score"] == 3.14
+        assert result["score_inf"] == float("inf")
+        import math
+
+        assert math.isnan(result["score_nan"])
+        assert result["flag"] is True
+        assert result["flag_false"] is False
+        assert result["flag_invalid"] == "not a boolean"
+        assert result["name"] == "alice"
+        assert result["mixed"] == 42
+        assert result["mixed_invalid"] == "not_bool"
+        assert result["unknown"] == "100"
+        assert result["no_type"] == "1"
+        assert result["already_int"] == 5
+
+    def test_coerce_tool_args_edge_cases(self):
+        from model_tools import coerce_tool_args
+
+        # Empty args
+        assert coerce_tool_args("tool", None) is None
+        assert coerce_tool_args("tool", []) == []
+
+        with patch("model_tools.registry.get_schema", return_value=None):
+            assert coerce_tool_args("tool", {"a": "1"}) == {"a": "1"}
+
+        with patch("model_tools.registry.get_schema", return_value={"parameters": {}}):
+            assert coerce_tool_args("tool", {"a": "1"}) == {"a": "1"}
+
+        with patch(
+            "model_tools.registry.get_schema",
+            return_value={
+                "parameters": {"properties": {"a": {"description": "no type"}}}
+            },
+        ):
+            assert coerce_tool_args("tool", {"a": "1"}) == {"a": "1"}
+
+        with patch(
+            "model_tools.registry.get_schema",
+            return_value={"parameters": {"properties": {"a": {"type": "integer"}}}},
+        ):
+            # Same value type, no coercion
+            assert coerce_tool_args("tool", {"a": 1}) == {"a": 1}
+            # Uncoercible string
+            assert coerce_tool_args("tool", {"a": "uncoercible"}) == {
+                "a": "uncoercible"
+            }
+
+
+# =========================================================================
 # Agent loop tools
 # =========================================================================
+
 
 class TestAgentLoopTools:
     def test_expected_tools_in_set(self):
@@ -94,6 +196,7 @@ class TestAgentLoopTools:
 # =========================================================================
 # Pre-tool-call blocking via plugin hooks
 # =========================================================================
+
 
 class TestPreToolCallBlocking:
     """Verify that pre_tool_call hooks can block tool execution."""
@@ -115,7 +218,9 @@ class TestPreToolCallBlocking:
         monkeypatch.setattr("hermes_cli.plugins.invoke_hook", fake_invoke_hook)
         monkeypatch.setattr("model_tools.registry.dispatch", fake_dispatch)
 
-        result = json.loads(handle_function_call("read_file", {"path": "test.txt"}, task_id="t1"))
+        result = json.loads(
+            handle_function_call("read_file", {"path": "test.txt"}, task_id="t1")
+        )
         assert result == {"error": "Blocked by policy"}
         assert not dispatch_called
 
@@ -128,31 +233,41 @@ class TestPreToolCallBlocking:
             return []
 
         monkeypatch.setattr("hermes_cli.plugins.invoke_hook", fake_invoke_hook)
-        monkeypatch.setattr("model_tools.registry.dispatch",
-                            lambda *a, **kw: (_ for _ in ()).throw(AssertionError("should not run")))
-        monkeypatch.setattr("tools.file_tools.notify_other_tool_call",
-                            lambda task_id: notifications.append(task_id))
+        monkeypatch.setattr(
+            "model_tools.registry.dispatch",
+            lambda *a, **kw: (_ for _ in ()).throw(AssertionError("should not run")),
+        )
+        monkeypatch.setattr(
+            "tools.file_tools.notify_other_tool_call",
+            lambda task_id: notifications.append(task_id),
+        )
 
-        result = json.loads(handle_function_call("web_search", {"q": "test"}, task_id="t1"))
+        result = json.loads(
+            handle_function_call("web_search", {"q": "test"}, task_id="t1")
+        )
         assert result == {"error": "Blocked"}
         assert notifications == []
 
     def test_invalid_hook_returns_do_not_block(self, monkeypatch):
         """Malformed hook returns should be ignored — tool executes normally."""
+
         def fake_invoke_hook(hook_name, **kwargs):
             if hook_name == "pre_tool_call":
                 return [
                     "block",
-                    {"action": "block"},           # missing message
+                    {"action": "block"},  # missing message
                     {"action": "deny", "message": "nope"},
                 ]
             return []
 
         monkeypatch.setattr("hermes_cli.plugins.invoke_hook", fake_invoke_hook)
-        monkeypatch.setattr("model_tools.registry.dispatch",
-                            lambda *a, **kw: json.dumps({"ok": True}))
+        monkeypatch.setattr(
+            "model_tools.registry.dispatch", lambda *a, **kw: json.dumps({"ok": True})
+        )
 
-        result = json.loads(handle_function_call("read_file", {"path": "test.txt"}, task_id="t1"))
+        result = json.loads(
+            handle_function_call("read_file", {"path": "test.txt"}, task_id="t1")
+        )
         assert result == {"ok": True}
 
     def test_skip_flag_prevents_double_block_check(self, monkeypatch):
@@ -164,11 +279,13 @@ class TestPreToolCallBlocking:
             return []
 
         monkeypatch.setattr("hermes_cli.plugins.invoke_hook", fake_invoke_hook)
-        monkeypatch.setattr("model_tools.registry.dispatch",
-                            lambda *a, **kw: json.dumps({"ok": True}))
+        monkeypatch.setattr(
+            "model_tools.registry.dispatch", lambda *a, **kw: json.dumps({"ok": True})
+        )
 
-        handle_function_call("web_search", {"q": "test"}, task_id="t1",
-                             skip_pre_tool_call_hook=True)
+        handle_function_call(
+            "web_search", {"q": "test"}, task_id="t1", skip_pre_tool_call_hook=True
+        )
 
         # Hook still fires for observer notification, but get_pre_tool_call_block_message
         # is not called — invoke_hook fires directly in the skip=True branch.
@@ -180,12 +297,21 @@ class TestPreToolCallBlocking:
 # Legacy toolset map
 # =========================================================================
 
+
 class TestLegacyToolsetMap:
     def test_expected_legacy_names(self):
         expected = [
-            "web_tools", "terminal_tools", "vision_tools", "moa_tools",
-            "image_tools", "skills_tools", "browser_tools", "cronjob_tools",
-            "rl_tools", "file_tools", "tts_tools",
+            "web_tools",
+            "terminal_tools",
+            "vision_tools",
+            "moa_tools",
+            "image_tools",
+            "skills_tools",
+            "browser_tools",
+            "cronjob_tools",
+            "rl_tools",
+            "file_tools",
+            "tts_tools",
         ]
         for name in expected:
             assert name in _LEGACY_TOOLSET_MAP, f"Missing legacy toolset: {name}"
@@ -200,6 +326,7 @@ class TestLegacyToolsetMap:
 # =========================================================================
 # Backward-compat wrappers
 # =========================================================================
+
 
 class TestBackwardCompat:
     def test_get_all_tool_names_returns_list(self):
