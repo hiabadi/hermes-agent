@@ -265,6 +265,7 @@ def classify_api_error(
         model: Current model slug.
         approx_tokens: Approximate token count of the current context.
         context_length: Maximum context length for the current model.
+        num_messages: The number of messages currently in the conversation history.
 
     Returns:
         ClassifiedError with reason and recovery action hints.
