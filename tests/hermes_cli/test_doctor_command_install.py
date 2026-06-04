@@ -271,5 +271,9 @@ class TestDoctorCommandInstallation:
         except Exception:
             pass
 
+        # Windows shutil.which can fail if _winapi is missing when monkeypatching sys.platform
+        import shutil
+        monkeypatch.setattr(shutil, "which", lambda cmd, mode=os.F_OK, path=None: cmd)
+
         out = _run_doctor(fix=False)
         assert "Command Installation" not in out
