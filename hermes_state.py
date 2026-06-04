@@ -1065,24 +1065,45 @@ class SessionDB:
                 return []
             matches = [dict(row) for row in cursor.fetchall()]
 
-        # Add surrounding context (1 message before + after each match).
-        # Done outside the lock so we don't hold it across N sequential queries.
-        for match in matches:
-            try:
+        # perf: avoid N+1 queries — fetch all needed context messages in batches
+        if not matches:
+            return []
+
+        needed_ids = set()
+        for m in matches:
+            needed_ids.add(m["id"] - 1)
+            needed_ids.add(m["id"])
+            needed_ids.add(m["id"] + 1)
+
+        needed_ids_list = list(needed_ids)
+        context_messages_by_id = {}
+        chunk_size = 500  # Safe limit under SQLITE_MAX_VARIABLE_NUMBER (999)
+
+        try:
+            for i in range(0, len(needed_ids_list), chunk_size):
+                chunk = needed_ids_list[i:i + chunk_size]
+                placeholders = ",".join("?" * len(chunk))
+                query_sql = f"SELECT id, session_id, role, content FROM messages WHERE id IN ({placeholders})"
                 with self._lock:
-                    ctx_cursor = self._conn.execute(
-                        """SELECT role, content FROM messages
-                           WHERE session_id = ? AND id >= ? - 1 AND id <= ? + 1
-                           ORDER BY id""",
-                        (match["session_id"], match["id"], match["id"]),
-                    )
-                    context_msgs = [
-                        {"role": r["role"], "content": (r["content"] or "")[:200]}
-                        for r in ctx_cursor.fetchall()
-                    ]
-                match["context"] = context_msgs
-            except Exception:
-                match["context"] = []
+                    cursor = self._conn.execute(query_sql, chunk)
+                    for row in cursor.fetchall():
+                        context_messages_by_id[row["id"]] = dict(row)
+        except Exception:
+            pass  # Fallback to empty context on error
+
+        for match in matches:
+            match_id = match["id"]
+            match_session = match["session_id"]
+            context_msgs = []
+
+            for cid in (match_id - 1, match_id, match_id + 1):
+                msg = context_messages_by_id.get(cid)
+                if msg and msg["session_id"] == match_session:
+                    context_msgs.append({
+                        "role": msg["role"],
+                        "content": (msg["content"] or "")[:200]
+                    })
+            match["context"] = context_msgs
 
         # Remove full content from result (snippet is enough, saves tokens)
         for match in matches:
