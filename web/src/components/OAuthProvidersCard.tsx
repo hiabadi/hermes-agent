@@ -191,7 +191,7 @@ export function OAuthProvidersCard({ onError, onSuccess }: Props) {
                       href={p.docs_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex"
+                      className="inline-flex focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                       title={`Open ${p.name} docs`}
                     >
                       <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
