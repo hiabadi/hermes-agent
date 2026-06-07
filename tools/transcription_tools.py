@@ -142,6 +142,8 @@ def _get_local_command_template() -> Optional[str]:
 
     whisper_binary = _find_whisper_binary()
     if whisper_binary:
+        # Quote the binary path so shlex.split() keeps it whole if it has spaces
+        # and posix=True doesn't eat Windows backslashes
         quoted_binary = shlex.quote(whisper_binary)
         return (
             f"{quoted_binary} {{input_path}} --model {{model}} --output_format txt "
@@ -367,13 +369,19 @@ def _transcribe_local_command(file_path: str, model_name: str) -> Dict[str, Any]
             if prep_error:
                 return {"success": False, "transcript": "", "error": prep_error}
 
-            command = command_template.format(
-                input_path=shlex.quote(prepared_input),
-                output_dir=shlex.quote(output_dir),
-                language=shlex.quote(language),
-                model=shlex.quote(normalized_model),
-            )
-            subprocess.run(command, shell=True, check=True, capture_output=True, text=True)
+            # SECURITY: CWE-78 — parameterize local shell execution to prevent command injection
+            split_template = shlex.split(command_template)
+            command = [
+                arg.format(
+                    input_path=prepared_input,
+                    output_dir=output_dir,
+                    language=language,
+                    model=normalized_model,
+                )
+                for arg in split_template
+            ]
+
+            subprocess.run(command, shell=False, check=True, capture_output=True, text=True)
 
             txt_files = sorted(Path(output_dir).glob("*.txt"))
             if not txt_files:
