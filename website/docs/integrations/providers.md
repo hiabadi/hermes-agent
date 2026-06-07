@@ -256,7 +256,7 @@ model:
 ```
 
 :::warning Legacy env vars
-`OPENAI_BASE_URL` and `LLM_MODEL` in `.env` are **removed**. Neither is read by any part of Hermes — `config.yaml` is the single source of truth for model and endpoint configuration. If you have stale entries in your `.env`, they are automatically cleared on the next `hermes setup` or config migration. Use `hermes model` or edit `config.yaml` directly.
+`OPENAI_BASE_URL` in `.env` is **removed**. It is not read by any part of Hermes — `config.yaml` is the single source of truth for model and endpoint configuration. If you have stale entries in your `.env`, they are automatically cleared on the next `hermes setup` or config migration. Use `hermes model` or edit `config.yaml` directly.
 :::
 
 Both approaches persist to `config.yaml`, which is the source of truth for model, provider, and base URL.
