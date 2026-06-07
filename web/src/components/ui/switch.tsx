@@ -5,14 +5,17 @@ export function Switch({
   onCheckedChange,
   className,
   disabled,
+  id,
 }: {
   checked: boolean;
   onCheckedChange: (v: boolean) => void;
   className?: string;
   disabled?: boolean;
+  id?: string;
 }) {
   return (
     <button
+      id={id}
       type="button"
       role="switch"
       aria-checked={checked}
