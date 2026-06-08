@@ -30,6 +30,10 @@ import re
 import difflib
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
+
+# perf: hoist re.compile to module level
+_RG_MATCH_RE = re.compile(r'^([A-Za-z]:)?(.*?):(\d+):(.*)$')
+_RG_CTX_RE = re.compile(r'^([A-Za-z]:)?(.*?)-(\d+)-(.*)$')
 from typing import Optional, List, Dict, Any
 from pathlib import Path
 from hermes_constants import get_hermes_home
@@ -1082,15 +1086,14 @@ class ShellFileOperations(FileOperations):
             # rg group seps:    "--"
             # Note: on Windows, paths contain drive letters (e.g. C:\path),
             # so naive split(":") breaks. Use regex to handle both platforms.
-            _match_re = re.compile(r'^([A-Za-z]:)?(.*?):(\d+):(.*)$')
-            _ctx_re = re.compile(r'^([A-Za-z]:)?(.*?)-(\d+)-(.*)$')
+            # perf: hoist re.compile to module level
             matches = []
             for line in result.stdout.strip().split('\n'):
                 if not line or line == "--":
                     continue
                 
                 # Try match line first (colon-separated: file:line:content)
-                m = _match_re.match(line)
+                m = _RG_MATCH_RE.match(line)
                 if m:
                     matches.append(SearchMatch(
                         path=(m.group(1) or '') + m.group(2),
@@ -1102,7 +1105,7 @@ class ShellFileOperations(FileOperations):
                 # Try context line (dash-separated: file-line-content)
                 # Only attempt if context was requested to avoid false positives
                 if context > 0:
-                    m = _ctx_re.match(line)
+                    m = _RG_CTX_RE.match(line)
                     if m:
                         matches.append(SearchMatch(
                             path=(m.group(1) or '') + m.group(2),
@@ -1181,14 +1184,13 @@ class ShellFileOperations(FileOperations):
             # grep group seps:    "--"
             # Note: on Windows, paths contain drive letters (e.g. C:\path),
             # so naive split(":") breaks. Use regex to handle both platforms.
-            _match_re = re.compile(r'^([A-Za-z]:)?(.*?):(\d+):(.*)$')
-            _ctx_re = re.compile(r'^([A-Za-z]:)?(.*?)-(\d+)-(.*)$')
+            # perf: hoist re.compile to module level
             matches = []
             for line in result.stdout.strip().split('\n'):
                 if not line or line == "--":
                     continue
                 
-                m = _match_re.match(line)
+                m = _RG_MATCH_RE.match(line)
                 if m:
                     matches.append(SearchMatch(
                         path=(m.group(1) or '') + m.group(2),
@@ -1198,7 +1200,7 @@ class ShellFileOperations(FileOperations):
                     continue
                 
                 if context > 0:
-                    m = _ctx_re.match(line)
+                    m = _RG_CTX_RE.match(line)
                     if m:
                         matches.append(SearchMatch(
                             path=(m.group(1) or '') + m.group(2),

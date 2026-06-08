@@ -21,6 +21,23 @@ from urllib.parse import urlsplit
 logger = logging.getLogger(__name__)
 
 
+# perf: hoist re.compile to module level
+_MEDIA_PATTERN = re.compile(
+    r'''[`"']?MEDIA:\s*(?P<path>`[^`\n]+`|"[^"\n]+"|'[^'\n]+'|(?:~/|/)\S+(?:[^\S\n]+\S+)*?\.(?:png|jpe?g|gif|webp|mp4|mov|avi|mkv|webm|ogg|opus|mp3|wav|m4a)(?=[\s`"',;:)\]}]|$)|\S+)[`"']?'''
+)
+
+_LOCAL_MEDIA_EXTS = (
+    '.png', '.jpg', '.jpeg', '.gif', '.webp',
+    '.mp4', '.mov', '.avi', '.mkv', '.webm',
+)
+_ext_part = '|'.join(e.lstrip('.') for e in _LOCAL_MEDIA_EXTS)
+
+_LOCAL_PATH_RE = re.compile(
+    r'(?<![/:\w.])(?:~/|/)(?:[\w.\-]+/)*[\w.\-]+\.(?:' + _ext_part + r')\b',
+    re.IGNORECASE,
+)
+
+
 def utf16_len(s: str) -> int:
     """Count UTF-16 code units in *s*.
 
@@ -1282,10 +1299,8 @@ class BasePlatformAdapter(ABC):
         
         # Extract MEDIA:<path> tags, allowing optional whitespace after the colon
         # and quoted/backticked paths for LLM-formatted outputs.
-        media_pattern = re.compile(
-            r'''[`"']?MEDIA:\s*(?P<path>`[^`\n]+`|"[^"\n]+"|'[^'\n]+'|(?:~/|/)\S+(?:[^\S\n]+\S+)*?\.(?:png|jpe?g|gif|webp|mp4|mov|avi|mkv|webm|ogg|opus|mp3|wav|m4a)(?=[\s`"',;:)\]}]|$)|\S+)[`"']?'''
-        )
-        for match in media_pattern.finditer(content):
+        # perf: hoist re.compile to module level
+        for match in _MEDIA_PATTERN.finditer(content):
             path = match.group("path").strip()
             if len(path) >= 2 and path[0] == path[-1] and path[0] in "`\"'":
                 path = path[1:-1].strip()
@@ -1295,7 +1310,7 @@ class BasePlatformAdapter(ABC):
 
         # Remove MEDIA tags from content (including surrounding quote/backtick wrappers)
         if media:
-            cleaned = media_pattern.sub('', cleaned)
+            cleaned = _MEDIA_PATTERN.sub('', cleaned)
             cleaned = re.sub(r'\n{3,}', '\n\n', cleaned).strip()
         
         return media, cleaned
@@ -1317,19 +1332,7 @@ class BasePlatformAdapter(ABC):
             Tuple of (list of expanded file paths, cleaned text with the
             raw path strings removed).
         """
-        _LOCAL_MEDIA_EXTS = (
-            '.png', '.jpg', '.jpeg', '.gif', '.webp',
-            '.mp4', '.mov', '.avi', '.mkv', '.webm',
-        )
-        ext_part = '|'.join(e.lstrip('.') for e in _LOCAL_MEDIA_EXTS)
-
-        # (?<![/:\w.]) prevents matching inside URLs (e.g. https://…/img.png)
-        #             and relative paths (./foo.png)
-        # (?:~/|/)    anchors to absolute or home-relative paths
-        path_re = re.compile(
-            r'(?<![/:\w.])(?:~/|/)(?:[\w.\-]+/)*[\w.\-]+\.(?:' + ext_part + r')\b',
-            re.IGNORECASE,
-        )
+        # perf: hoist re.compile to module level
 
         # Build spans covered by fenced code blocks and inline code
         code_spans: list = []
@@ -1342,7 +1345,7 @@ class BasePlatformAdapter(ABC):
             return any(s <= pos < e for s, e in code_spans)
 
         found: list = []  # (raw_match_text, expanded_path)
-        for match in path_re.finditer(content):
+        for match in _LOCAL_PATH_RE.finditer(content):
             if _in_code(match.start()):
                 continue
             raw = match.group(0)

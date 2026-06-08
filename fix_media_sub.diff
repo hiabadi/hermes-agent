@@ -1,0 +1,11 @@
+<<<<<<< SEARCH
+        # Remove MEDIA tags from content (including surrounding quote/backtick wrappers)
+        if media:
+            cleaned = media_pattern.sub('', cleaned)
+            cleaned = re.sub(r'\n{3,}', '\n\n', cleaned).strip()
+=======
+        # Remove MEDIA tags from content (including surrounding quote/backtick wrappers)
+        if media:
+            cleaned = _MEDIA_PATTERN.sub('', cleaned)
+            cleaned = re.sub(r'\n{3,}', '\n\n', cleaned).strip()
+>>>>>>> REPLACE
