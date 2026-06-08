@@ -1,0 +1,29 @@
+<<<<<<< SEARCH
+        Returns:
+            Tuple of (list of expanded file paths, cleaned text with the
+            raw path strings removed).
+        """
+        _LOCAL_MEDIA_EXTS = (
+            '.png', '.jpg', '.jpeg', '.gif', '.webp',
+            '.mp4', '.mov', '.avi', '.mkv', '.webm',
+        )
+        ext_part = '|'.join(e.lstrip('.') for e in _LOCAL_MEDIA_EXTS)
+
+        # (?<![/:\w.]) prevents matching inside URLs (e.g. https://…/img.png)
+        #             and relative paths (./foo.png)
+        # (?:~/|/)    anchors to absolute or home-relative paths
+        path_re = re.compile(
+            r'(?<![/:\w.])(?:~/|/)(?:[\w.\-]+/)*[\w.\-]+\.(?:' + ext_part + r')\b',
+            re.IGNORECASE,
+        )
+
+        # Build spans covered by fenced code blocks and inline code
+=======
+        Returns:
+            Tuple of (list of expanded file paths, cleaned text with the
+            raw path strings removed).
+        """
+        # perf: hoist re.compile to module level
+
+        # Build spans covered by fenced code blocks and inline code
+>>>>>>> REPLACE

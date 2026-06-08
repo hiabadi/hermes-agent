@@ -1,0 +1,15 @@
+<<<<<<< SEARCH
+        def _in_code(pos: int) -> bool:
+            return any(s <= pos < e for s, e in code_spans)
+
+        found: list = []  # (raw_match_text, expanded_path)
+        for match in path_re.finditer(content):
+            if _in_code(match.start()):
+=======
+        def _in_code(pos: int) -> bool:
+            return any(s <= pos < e for s, e in code_spans)
+
+        found: list = []  # (raw_match_text, expanded_path)
+        for match in _LOCAL_PATH_RE.finditer(content):
+            if _in_code(match.start()):
+>>>>>>> REPLACE
