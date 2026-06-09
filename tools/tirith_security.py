@@ -35,6 +35,7 @@ import time
 import urllib.request
 
 from hermes_constants import get_hermes_home
+from utils import env_int, env_bool
 
 logger = logging.getLogger(__name__)
 
@@ -47,23 +48,6 @@ _COSIGN_ISSUER = "https://token.actions.githubusercontent.com"
 # ---------------------------------------------------------------------------
 # Config helpers
 # ---------------------------------------------------------------------------
-
-def _env_bool(key: str, default: bool) -> bool:
-    val = os.getenv(key)
-    if val is None:
-        return default
-    return val.lower() in ("1", "true", "yes")
-
-
-def _env_int(key: str, default: int) -> int:
-    val = os.getenv(key)
-    if val is None:
-        return default
-    try:
-        return int(val)
-    except ValueError:
-        return default
-
 
 def _load_security_config() -> dict:
     """Load security settings from config.yaml, with env var overrides."""
@@ -80,10 +64,10 @@ def _load_security_config() -> dict:
         cfg = {}
 
     return {
-        "tirith_enabled": _env_bool("TIRITH_ENABLED", cfg.get("tirith_enabled", defaults["tirith_enabled"])),
+        "tirith_enabled": env_bool("TIRITH_ENABLED", cfg.get("tirith_enabled", defaults["tirith_enabled"])),
         "tirith_path": os.getenv("TIRITH_BIN", cfg.get("tirith_path", defaults["tirith_path"])),
-        "tirith_timeout": _env_int("TIRITH_TIMEOUT", cfg.get("tirith_timeout", defaults["tirith_timeout"])),
-        "tirith_fail_open": _env_bool("TIRITH_FAIL_OPEN", cfg.get("tirith_fail_open", defaults["tirith_fail_open"])),
+        "tirith_timeout": env_int("TIRITH_TIMEOUT", cfg.get("tirith_timeout", defaults["tirith_timeout"])),
+        "tirith_fail_open": env_bool("TIRITH_FAIL_OPEN", cfg.get("tirith_fail_open", defaults["tirith_fail_open"])),
     }
 
 
