@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import {
   ChevronDown,
   ChevronLeft,
@@ -64,12 +64,16 @@ function ToolCallBlock({ toolCall }: { toolCall: { id: string; function: { name:
   const [open, setOpen] = useState(false);
   const { t } = useI18n();
 
-  let args = toolCall.function.arguments;
-  try {
-    args = JSON.stringify(JSON.parse(args), null, 2);
-  } catch {
-    // keep as-is
-  }
+  // perf: avoid synchronous JSON.parse/stringify on every render
+  const formattedArgs = useMemo(() => {
+    let args = toolCall.function.arguments;
+    try {
+      args = JSON.stringify(JSON.parse(args), null, 2);
+    } catch {
+      // keep as-is
+    }
+    return args;
+  }, [toolCall.function.arguments]);
 
   return (
     <div className="mt-2 border border-warning/20 bg-warning/5">
@@ -85,7 +89,7 @@ function ToolCallBlock({ toolCall }: { toolCall: { id: string; function: { name:
       </button>
       {open && (
         <pre className="border-t border-warning/20 px-3 py-2 text-xs text-warning/80 overflow-x-auto whitespace-pre-wrap font-mono">
-          {args}
+          {formattedArgs}
         </pre>
       )}
     </div>
