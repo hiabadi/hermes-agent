@@ -126,10 +126,15 @@ export default function ConfigPage() {
   /* ---- Categories ---- */
   const categories = useMemo(() => {
     if (!schema) return [];
-    const allCats = [...new Set(Object.values(schema).map((s) => String(s.category ?? "general")))];
-    const ordered = categoryOrder.filter((c) => allCats.includes(c));
-    const extra = allCats.filter((c) => !categoryOrder.includes(c)).sort();
+    // perf: use Set.has() instead of Array.includes() for O(1) membership checks
+    const allCatsSet = new Set(Object.values(schema).map((s) => String(s.category ?? "general")));
+    const ordered = categoryOrder.filter((c) => allCatsSet.has(c));
+
+    const categoryOrderSet = new Set(categoryOrder);
+    const extra = Array.from(allCatsSet).filter((c) => !categoryOrderSet.has(c)).sort();
+
     return [...ordered, ...extra];
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [schema, categoryOrder]);
 
   /* ---- Category field counts ---- */
