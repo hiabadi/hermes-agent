@@ -367,13 +367,18 @@ def _transcribe_local_command(file_path: str, model_name: str) -> Dict[str, Any]
             if prep_error:
                 return {"success": False, "transcript": "", "error": prep_error}
 
-            command = command_template.format(
-                input_path=shlex.quote(prepared_input),
-                output_dir=shlex.quote(output_dir),
-                language=shlex.quote(language),
-                model=shlex.quote(normalized_model),
-            )
-            subprocess.run(command, shell=True, check=True, capture_output=True, text=True)
+            command_tokens = shlex.split(command_template)
+            command = [
+                token.format(
+                    input_path=prepared_input,
+                    output_dir=output_dir,
+                    language=language,
+                    model=normalized_model,
+                )
+                for token in command_tokens
+            ]
+            # SECURITY: CWE-78 — Prevent command injection by tokenizing first and avoiding shell=True
+            subprocess.run(command, shell=False, check=True, capture_output=True, text=True)
 
             txt_files = sorted(Path(output_dir).glob("*.txt"))
             if not txt_files:
