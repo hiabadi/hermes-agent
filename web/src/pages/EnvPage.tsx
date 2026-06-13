@@ -285,12 +285,16 @@ function ProviderGroupCard({
   // Get a representative URL for "Get key" link
   const keyUrl = apiKeys.find(([, info]) => info.url)?.[1]?.url ?? null;
 
+  const contentId = `provider-group-${group.name.replace(/\s+/g, '-').toLowerCase()}`;
+
   return (
     <div className="border border-border">
       {/* Header — always visible */}
       <button
         type="button"
         onClick={() => setExpanded(!expanded)}
+        aria-expanded={expanded}
+        aria-controls={contentId}
         className="flex w-full items-center justify-between gap-3 px-4 py-3 cursor-pointer hover:bg-primary/5 transition-colors"
       >
         <div className="flex items-center gap-3 min-w-0">
@@ -318,7 +322,7 @@ function ProviderGroupCard({
 
       {/* Expanded content */}
       {expanded && (
-        <div className="border-t border-border px-4 py-3 grid gap-2">
+        <div id={contentId} className="border-t border-border px-4 py-3 grid gap-2">
           {/* API keys first (most important) */}
           {apiKeys.map(([key, info]) => (
             <EnvVarRow
@@ -606,11 +610,14 @@ function CollapsibleUnset({
 }) {
   const [collapsed, setCollapsed] = useState(true);
   const { t } = useI18n();
+  const contentId = `unset-group-${_category}`;
 
   return (
     <>
       <button
         type="button"
+        aria-expanded={!collapsed}
+        aria-controls={contentId}
         className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer pt-1"
         onClick={() => setCollapsed(!collapsed)}
       >
@@ -620,13 +627,17 @@ function CollapsibleUnset({
         <span>{t.env.notConfigured.replace("{count}", String(unsetEntries.length))}</span>
       </button>
 
-      {!collapsed && unsetEntries.map(([key, info]) => (
-        <EnvVarRow
-          key={key} varKey={key} info={info}
-          edits={edits} setEdits={setEdits} revealed={revealed} saving={saving}
-          onSave={onSave} onClear={onClear} onReveal={onReveal} onCancelEdit={onCancelEdit}
-        />
-      ))}
+      {!collapsed && (
+        <div id={contentId} className="grid gap-3 mt-3">
+          {unsetEntries.map(([key, info]) => (
+            <EnvVarRow
+              key={key} varKey={key} info={info}
+              edits={edits} setEdits={setEdits} revealed={revealed} saving={saving}
+              onSave={onSave} onClear={onClear} onReveal={onReveal} onCancelEdit={onCancelEdit}
+            />
+          ))}
+        </div>
+      )}
     </>
   );
 }
