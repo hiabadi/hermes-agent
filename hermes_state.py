@@ -737,18 +737,25 @@ class SessionDB:
         params = []
 
         if not include_children:
-            where_clauses.append("s.parent_session_id IS NULL")
+            where_clauses.append("parent_session_id IS NULL")
 
         if source:
-            where_clauses.append("s.source = ?")
+            where_clauses.append("source = ?")
             params.append(source)
         if exclude_sources:
             placeholders = ",".join("?" for _ in exclude_sources)
-            where_clauses.append(f"s.source NOT IN ({placeholders})")
+            where_clauses.append(f"source NOT IN ({placeholders})")
             params.extend(exclude_sources)
 
         where_sql = f"WHERE {' AND '.join(where_clauses)}" if where_clauses else ""
         query = f"""
+            WITH paginated_sessions AS (
+                SELECT * FROM sessions
+                {where_sql}
+                ORDER BY started_at DESC
+                LIMIT ? OFFSET ?
+            )
+            -- perf: wrap base query in CTE to evaluate correlated subqueries only on paginated subset
             SELECT s.*,
                 COALESCE(
                     (SELECT SUBSTR(REPLACE(REPLACE(m.content, X'0A', ' '), X'0D', ' '), 1, 63)
@@ -761,10 +768,8 @@ class SessionDB:
                     (SELECT MAX(m2.timestamp) FROM messages m2 WHERE m2.session_id = s.id),
                     s.started_at
                 ) AS last_active
-            FROM sessions s
-            {where_sql}
+            FROM paginated_sessions s
             ORDER BY s.started_at DESC
-            LIMIT ? OFFSET ?
         """
         params.extend([limit, offset])
         with self._lock:
