@@ -25,6 +25,7 @@ hermes [global-options] <command> [subcommand/options]
 | `--resume <session>`, `-r <session>` | Resume a previous session by ID or title. |
 | `--continue [name]`, `-c [name]` | Resume the most recent session, or the most recent session matching a title. |
 | `--worktree`, `-w` | Start in an isolated git worktree for parallel-agent workflows. |
+| `--skills <name>`, `-s <name>` | Preload one or more skills for the session (can be repeated or comma-separated). |
 | `--yolo` | Bypass dangerous-command approval prompts. |
 | `--pass-session-id` | Include the session ID in the agent's system prompt. |
 
