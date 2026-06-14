@@ -81,9 +81,10 @@ export function Select({
   };
 
   return (
-    <div ref={containerRef} className={cn("relative", className)} id={id}>
+    <div ref={containerRef} className={cn("relative", className)}>
       <button
         type="button"
+        id={id}
         role="combobox"
         aria-expanded={open}
         aria-haspopup="listbox"
