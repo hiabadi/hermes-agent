@@ -117,3 +117,20 @@ class TestTodoToolFunction:
     def test_no_store_returns_error(self):
         result = json.loads(todo_tool())
         assert "error" in result
+
+
+class TestValidateEdgeCases:
+    def test_empty_id_gets_question_mark(self):
+        store = TodoStore()
+        result = store.write([{"content": "Missing ID", "status": "pending"}])
+        assert result[0]["id"] == "?"
+
+    def test_empty_content_gets_default(self):
+        store = TodoStore()
+        result = store.write([{"id": "1", "status": "pending"}])
+        assert result[0]["content"] == "(no description)"
+
+    def test_invalid_status_defaults_to_pending(self):
+        store = TodoStore()
+        result = store.write([{"id": "1", "content": "Valid", "status": "invalid_status"}])
+        assert result[0]["status"] == "pending"
