@@ -114,8 +114,8 @@ export default function LogsPage() {
         </div>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
-            <Switch checked={autoRefresh} onCheckedChange={setAutoRefresh} />
-            <Label className="text-xs">{t.logs.autoRefresh}</Label>
+            <Switch id="auto-refresh-switch" checked={autoRefresh} onCheckedChange={setAutoRefresh} />
+            <Label htmlFor="auto-refresh-switch" className="text-xs">{t.logs.autoRefresh}</Label>
             {autoRefresh && (
               <Badge variant="success" className="text-[10px]">
                 <span className="mr-1 inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-current" />
