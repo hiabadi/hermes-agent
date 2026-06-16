@@ -748,23 +748,28 @@ class SessionDB:
             params.extend(exclude_sources)
 
         where_sql = f"WHERE {' AND '.join(where_clauses)}" if where_clauses else ""
+        # perf: avoid N+1 scans for limit/offset by paginating a CTE before expensive subqueries
         query = f"""
-            SELECT s.*,
+            WITH paginated_sessions AS (
+                SELECT * FROM sessions s
+                {where_sql}
+                ORDER BY s.started_at DESC
+                LIMIT ? OFFSET ?
+            )
+            SELECT ps.*,
                 COALESCE(
                     (SELECT SUBSTR(REPLACE(REPLACE(m.content, X'0A', ' '), X'0D', ' '), 1, 63)
                      FROM messages m
-                     WHERE m.session_id = s.id AND m.role = 'user' AND m.content IS NOT NULL
+                     WHERE m.session_id = ps.id AND m.role = 'user' AND m.content IS NOT NULL
                      ORDER BY m.timestamp, m.id LIMIT 1),
                     ''
                 ) AS _preview_raw,
                 COALESCE(
-                    (SELECT MAX(m2.timestamp) FROM messages m2 WHERE m2.session_id = s.id),
-                    s.started_at
+                    (SELECT MAX(m2.timestamp) FROM messages m2 WHERE m2.session_id = ps.id),
+                    ps.started_at
                 ) AS last_active
-            FROM sessions s
-            {where_sql}
-            ORDER BY s.started_at DESC
-            LIMIT ? OFFSET ?
+            FROM paginated_sessions ps
+            ORDER BY ps.started_at DESC
         """
         params.extend([limit, offset])
         with self._lock:
