@@ -430,10 +430,12 @@ function SkillRow({
   onToggle,
   noDescriptionLabel,
 }: SkillRowProps) {
+  const switchId = `skill-switch-${skill.name}`;
   return (
     <div className="group flex items-start gap-3 px-3 py-2.5 transition-colors hover:bg-muted/40">
       <div className="pt-0.5 shrink-0">
         <Switch
+          id={switchId}
           checked={skill.enabled}
           onCheckedChange={onToggle}
           disabled={toggling}
