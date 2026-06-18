@@ -1217,6 +1217,47 @@ class TestTerminateHostPidWindows:
 
         assert kill_calls == [(12345, signal.SIGTERM)]
 
+    def test_posix_child_vanishes_during_termination(self, monkeypatch):
+        from tools import process_registry as pr
+        import psutil
+
+        class _FakeChild:
+            def terminate(self):
+                raise psutil.NoSuchProcess(999)
+
+        class _FakeParent:
+            def children(self, recursive=False):
+                return [_FakeChild()]
+
+            def terminate(self):
+                pass
+
+        def fake_process(pid):
+            return _FakeParent()
+
+        monkeypatch.setattr(pr, "_IS_WINDOWS", False)
+        monkeypatch.setattr(psutil, "Process", fake_process)
+
+        # Should not raise exception
+        pr.ProcessRegistry._terminate_host_pid(12345)
+
+    def test_posix_oserror_fallback_swallows_process_lookup_error(self, monkeypatch):
+        from tools import process_registry as pr
+        import psutil
+
+        def boom(pid):
+            raise PermissionError("can't read /proc")
+
+        def fake_kill(pid, sig):
+            raise ProcessLookupError("process went away")
+
+        monkeypatch.setattr(pr, "_IS_WINDOWS", False)
+        monkeypatch.setattr(psutil, "Process", boom)
+        monkeypatch.setattr(pr.os, "kill", fake_kill)
+
+        # Should not raise exception
+        pr.ProcessRegistry._terminate_host_pid(12345)
+
     def test_windows_does_not_call_psutil(self, monkeypatch):
         """The Windows branch must NOT exercise the psutil tree-walk
         (it's unreliable on Windows — see the function docstring)."""
