@@ -289,7 +289,7 @@ Each result includes:
 
 The `_sanitize_fts5_query()` method handles edge cases:
 - Strips unmatched quotes and special characters
-- Wraps hyphenated terms in quotes (`chat-send` → `"chat-send"`)
+- Wraps hyphenated and dotted terms in quotes (`chat-send` → `"chat-send"`, `P2.2` → `"P2.2"`)
 - Removes dangling boolean operators (`hello AND` → `hello`)
 
 
