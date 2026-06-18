@@ -4,6 +4,8 @@ import {
   useState,
   useCallback,
   useRef,
+  useMemo,
+  memo,
 } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -201,12 +203,15 @@ function splitCompactionContent(content: string): CompactionSplit | null {
 }
 
 
-function MessageBubble({
+// perf: memoize message bubbles and accept pre-split terms to avoid O(n*m) splits/renders
+const MessageBubble = memo(function MessageBubble({
   msg,
-  highlight,
+  highlightTerms,
+  highlightLowerTerms,
 }: {
   msg: SessionMessage;
-  highlight?: string;
+  highlightTerms?: string[];
+  highlightLowerTerms?: string[];
 }) {
   const { t } = useI18n();
 
@@ -261,7 +266,8 @@ function MessageBubble({
       <>
         <MessageBubble
           msg={{ ...msg, content: compactionSplit.summary }}
-          highlight={highlight}
+          highlightTerms={highlightTerms}
+          highlightLowerTerms={highlightLowerTerms}
         />
         <MessageBubble
           msg={{
@@ -273,7 +279,8 @@ function MessageBubble({
             // ``isCompactionMessage`` returns false on this stripped
             // content because it no longer starts with the prefix.
           }}
-          highlight={highlight}
+          highlightTerms={highlightTerms}
+          highlightLowerTerms={highlightLowerTerms}
         />
       </>
     );
@@ -291,15 +298,11 @@ function MessageBubble({
 
   // Check if any search term appears as a prefix of any word in content
   const isHit = (() => {
-    if (!highlight || !msg.content) return false;
+    if (!highlightLowerTerms || highlightLowerTerms.length === 0 || !msg.content)
+      return false;
     const content = msg.content.toLowerCase();
-    const terms = highlight.toLowerCase().split(/\s+/).filter(Boolean);
-    return terms.some((term) => content.includes(term));
+    return highlightLowerTerms.some((term) => content.includes(term));
   })();
-
-  // Split search query into terms for inline highlighting
-  const highlightTerms =
-    isHit && highlight ? highlight.split(/\s+/).filter(Boolean) : undefined;
 
   return (
     <div
@@ -336,7 +339,7 @@ function MessageBubble({
       )}
     </div>
   );
-}
+});
 
 /** Message list with auto-scroll to first search hit. */
 function MessageList({
@@ -360,13 +363,21 @@ function MessageList({
     return () => clearTimeout(timer);
   }, [messages, highlight]);
 
+  const highlightTerms = useMemo(() => {
+    return highlight ? highlight.split(/\s+/).filter(Boolean) : undefined;
+  }, [highlight]);
+
+  const highlightLowerTerms = useMemo(() => {
+    return highlight ? highlight.toLowerCase().split(/\s+/).filter(Boolean) : undefined;
+  }, [highlight]);
+
   return (
     <div
       ref={containerRef}
       className="flex flex-col gap-3 max-h-[600px] overflow-y-auto pr-2"
     >
       {messages.map((msg, i) => (
-        <MessageBubble key={i} msg={msg} highlight={highlight} />
+        <MessageBubble key={i} msg={msg} highlightTerms={highlightTerms} highlightLowerTerms={highlightLowerTerms} />
       ))}
     </div>
   );
