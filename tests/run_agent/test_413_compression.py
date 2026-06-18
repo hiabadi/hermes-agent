@@ -82,6 +82,7 @@ def agent():
         patch("run_agent.get_tool_definitions", return_value=_make_tool_defs("web_search")),
         patch("run_agent.check_toolset_requirements", return_value={}),
         patch("run_agent.OpenAI"),
+        patch("agent.auxiliary_client.resolve_provider_client", return_value=(MagicMock(api_key="test", base_url="https://api.openai.com"), "test-model")),
     ):
         a = AIAgent(
             api_key="test-key-1234567890",
