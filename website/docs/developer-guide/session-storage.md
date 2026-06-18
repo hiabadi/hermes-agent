@@ -230,6 +230,22 @@ conversation = db.get_messages_as_conversation("sess_abc123")
 # Returns: [{"role": "user", "content": "..."}, {"role": "assistant", ...}]
 ```
 
+### List Sessions with Preview
+
+```python
+# List recent sessions with a preview snippet and last active time
+sessions = db.list_sessions_rich(limit=10)
+
+# Filter by source
+cli_sessions = db.list_sessions_rich(source="cli", limit=5)
+
+# Exclude specific sources
+user_sessions = db.list_sessions_rich(exclude_sources=["cron", "tool"])
+
+# Include child sessions (like subagent runs)
+all_sessions = db.list_sessions_rich(include_children=True)
+```
+
 ### Session Titles
 
 ```python
