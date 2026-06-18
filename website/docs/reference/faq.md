@@ -30,7 +30,7 @@ Set your provider with `hermes model` or by editing `~/.hermes/.env`. See the [E
 
 ### Does it work on Windows?
 
-**Yes, natively.** Hermes supports native Windows via the PowerShell installer — no WSL required. Run in PowerShell:
+**Yes, via WSL2.** Hermes officially supports Windows via WSL2. Native Windows is not officially supported, although an experimental PowerShell installer exists for edge cases:
 
 ```powershell
 iex (irm https://hermes-agent.nousresearch.com/install.ps1)

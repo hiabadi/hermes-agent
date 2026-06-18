@@ -7,7 +7,7 @@ sidebar_position: 2
 
 # Windows (WSL2) Guide
 
-Hermes Agent now supports **both** native Windows and WSL2.  This page covers the WSL2 path; for the native PowerShell install see the dedicated **[Windows (Native) Guide](./windows-native.md)**.
+Hermes Agent officially supports Windows via **WSL2**. This page covers the WSL2 path. Native Windows is not officially supported, although a dedicated **[Windows (Native) Guide](./windows-native.md)** exists for experimental edge cases.
 
 **When to pick WSL2 over native:**
 - You want to use the dashboard's embedded terminal (`/chat` tab) — that pane requires a POSIX PTY and is WSL2-only.
