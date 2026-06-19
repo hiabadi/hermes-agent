@@ -446,6 +446,87 @@ def file_ops(mock_env):
     return ShellFileOperations(mock_env)
 
 
+class TestShellFileOpsReadFileRaw:
+    def test_normal_read(self, mock_env):
+        """read_file_raw reads complete file content when available."""
+        def side_effect(command, **kwargs):
+            if "wc -c" in command:
+                return {"output": "42\n", "returncode": 0}
+            if "head -c 1000" in command:
+                return {"output": "text content sample", "returncode": 0}
+            if command.startswith("cat "):
+                return {"output": "full file text content", "returncode": 0}
+            return {"output": "", "returncode": 0}
+        mock_env.execute.side_effect = side_effect
+        ops = ShellFileOperations(mock_env)
+        result = ops.read_file_raw("test.txt")
+        assert result.content == "full file text content"
+        assert result.file_size == 42
+        assert result.error is None
+        assert not result.is_binary
+        assert not result.is_image
+
+    def test_file_not_found(self, mock_env):
+        """read_file_raw handles missing files via suggest_similar_files."""
+        def side_effect(command, **kwargs):
+            if "wc -c" in command:
+                return {"output": "No such file or directory\n", "returncode": 1}
+            # For similar files
+            if "ls -A" in command or "find " in command:
+                return {"output": "", "returncode": 0}
+            return {"output": "", "returncode": 0}
+        mock_env.execute.side_effect = side_effect
+        ops = ShellFileOperations(mock_env)
+        result = ops.read_file_raw("missing.txt")
+        assert result.error is not None
+        assert "File not found" in result.error
+
+    def test_image_file(self, mock_env):
+        """read_file_raw identifies images by extension without trying to read."""
+        def side_effect(command, **kwargs):
+            if "wc -c" in command:
+                return {"output": "1024\n", "returncode": 0}
+            return {"output": "", "returncode": 0}
+        mock_env.execute.side_effect = side_effect
+        ops = ShellFileOperations(mock_env)
+        result = ops.read_file_raw("image.png")
+        assert result.is_image is True
+        assert result.is_binary is True
+        assert result.file_size == 1024
+
+    def test_binary_file(self, mock_env):
+        """read_file_raw detects binary content via head sample."""
+        def side_effect(command, **kwargs):
+            if "wc -c" in command:
+                return {"output": "5000\n", "returncode": 0}
+            if "head -c 1000" in command:
+                return {"output": "ELF\x00\x01\x02\x03", "returncode": 0}
+            return {"output": "", "returncode": 0}
+        mock_env.execute.side_effect = side_effect
+        ops = ShellFileOperations(mock_env)
+        result = ops.read_file_raw("program.bin")
+        assert result.is_binary is True
+        assert result.error is not None
+        assert "Binary file" in result.error
+        assert result.file_size == 5000
+
+    def test_cat_failure(self, mock_env):
+        """read_file_raw handles errors from cat."""
+        def side_effect(command, **kwargs):
+            if "wc -c" in command:
+                return {"output": "100\n", "returncode": 0}
+            if "head -c 1000" in command:
+                return {"output": "text content", "returncode": 0}
+            if command.startswith("cat "):
+                return {"output": "Permission denied", "returncode": 1}
+            return {"output": "", "returncode": 0}
+        mock_env.execute.side_effect = side_effect
+        ops = ShellFileOperations(mock_env)
+        result = ops.read_file_raw("secure.txt")
+        assert result.error is not None
+        assert "Failed to read file: Permission denied" in result.error
+
+
 class TestShellFileOpsHelpers:
     def test_normalize_read_pagination_clamps_invalid_values(self):
         assert normalize_read_pagination(offset=0, limit=0) == (1, 1)
