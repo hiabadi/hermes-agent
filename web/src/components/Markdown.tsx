@@ -370,7 +370,8 @@ function HighlightedText({ text, terms }: { text: string; terms?: string[] }) {
   return (
     <>
       {parts.map((part, i) =>
-        regex.test(part) ? (
+        // perf: avoid regex.test() in loop, capturing groups split exactly so odd indices are the matches
+        i % 2 === 1 ? (
           <mark key={i} className="bg-warning/30 text-warning px-0.5">
             {part}
           </mark>
