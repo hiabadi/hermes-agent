@@ -21,14 +21,21 @@ hermes [global-options] <command> [subcommand/options]
 | Option | Description |
 |--------|-------------|
 | `--version`, `-V` | Show version and exit. |
+| `--oneshot`, `-z PROMPT` | One-shot mode: send a single prompt and print ONLY the final response text to stdout. Intended for scripts / pipes. |
+| `--model`, `-m MODEL` | Model override for this invocation (e.g. anthropic/claude-sonnet-4.6). Applies to -z/--oneshot and --tui. |
+| `--provider PROVIDER` | Provider override for this invocation (e.g. openrouter, anthropic). Applies to -z/--oneshot and --tui. |
+| `--toolsets`, `-t TOOLSETS` | Comma-separated toolsets to enable for this invocation. Applies to -z/--oneshot and --tui. |
 | `--profile <name>`, `-p <name>` | Select which Hermes profile to use for this invocation. Overrides the sticky default set by `hermes profile use`. |
 | `--resume <session>`, `-r <session>` | Resume a previous session by ID or title. |
 | `--continue [name]`, `-c [name]` | Resume the most recent session, or the most recent session matching a title. |
 | `--worktree`, `-w` | Start in an isolated git worktree for parallel-agent workflows. |
-| `--yolo` | Bypass dangerous-command approval prompts. |
+| `--accept-hooks` | Auto-approve any unseen shell hooks declared in config.yaml without a TTY prompt. Use on CI / headless runs that can't prompt. |
+| `--skills`, `-s SKILL` | Preload one or more skills for the session (repeat flag or comma-separate). |
+| `--yolo` | Bypass all dangerous command approval prompts (use at your own risk). |
 | `--pass-session-id` | Include the session ID in the agent's system prompt. |
 | `--ignore-user-config` | Ignore `~/.hermes/config.yaml` and fall back to built-in defaults. Credentials in `.env` are still loaded. |
 | `--ignore-rules` | Skip auto-injection of `AGENTS.md`, `SOUL.md`, `.cursorrules`, memory, and preloaded skills. |
+| `--safe-mode` | Troubleshooting mode: disable ALL customizations — user config, AGENTS.md/memory injection, plugins, and MCP servers (implies --ignore-user-config and --ignore-rules). |
 | `--tui` | Launch the [TUI](../user-guide/tui.md) instead of the classic CLI. Equivalent to `HERMES_TUI=1`. Always wins over `display.interface`. |
 | `--cli` | Force the classic prompt_toolkit REPL. Use this to override `display.interface: tui` for a single invocation. |
 | `--dev` | With `--tui`: run the TypeScript sources directly via `tsx` instead of the prebuilt bundle (for TUI contributors). |
