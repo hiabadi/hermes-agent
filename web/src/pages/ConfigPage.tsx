@@ -215,13 +215,15 @@ export default function ConfigPage() {
   /* ---- Categories ---- */
   const categories = useMemo(() => {
     if (!schema) return [];
-    const allCats = [
-      ...new Set(
-        Object.values(schema).map((s) => String(s.category ?? "general")),
-      ),
-    ];
-    const ordered = categoryOrder.filter((c) => allCats.includes(c));
-    const extra = allCats.filter((c) => !categoryOrder.includes(c)).sort();
+    const allCatsSet = new Set(
+      Object.values(schema).map((s) => String(s.category ?? "general")),
+    );
+    const categoryOrderSet = new Set(categoryOrder);
+
+    // perf: avoid O(n²) — Set lookup is O(1) (was Array.includes)
+    const ordered = categoryOrder.filter((c) => allCatsSet.has(c));
+    const extra = Array.from(allCatsSet).filter((c) => !categoryOrderSet.has(c)).sort();
+
     return [...ordered, ...extra];
   }, [schema, categoryOrder]);
 
