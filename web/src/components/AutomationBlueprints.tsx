@@ -30,14 +30,16 @@ function FieldInput({
   field,
   value,
   onChange,
+  id,
 }: {
   field: AutomationBlueprintField;
   value: string;
   onChange: (v: string) => void;
+  id?: string;
 }) {
   if (field.type === "enum" || field.type === "weekdays") {
     return (
-      <Select value={value} onValueChange={(v) => onChange(v)}>
+      <Select id={id} value={value} onValueChange={(v) => onChange(v)}>
         {field.options.map((opt) => (
           <SelectOption key={opt} value={opt}>
             {opt}
@@ -49,6 +51,7 @@ function FieldInput({
   if (field.type === "time") {
     return (
       <Input
+        id={id}
         type="time"
         value={value}
         onChange={(e) => onChange(e.target.value)}
@@ -58,6 +61,7 @@ function FieldInput({
   // text
   return (
     <Input
+      id={id}
       type="text"
       value={value}
       placeholder={field.help || field.label}
@@ -134,6 +138,7 @@ function BlueprintCard({
               <div key={f.name} className="space-y-1">
                 <Label htmlFor={`${blueprint.key}-${f.name}`}>{f.label}</Label>
                 <FieldInput
+                  id={`${blueprint.key}-${f.name}`}
                   field={f}
                   value={values[f.name] ?? ""}
                   onChange={(v) => setValues((prev) => ({ ...prev, [f.name]: v }))}

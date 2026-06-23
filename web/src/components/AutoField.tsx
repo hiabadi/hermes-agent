@@ -1,3 +1,4 @@
+import { useId } from "react";
 import { Select, SelectOption } from "@nous-research/ui/ui/components/select";
 import { Switch } from "@nous-research/ui/ui/components/switch";
 import { Input } from "@nous-research/ui/ui/components/input";
@@ -32,24 +33,31 @@ function NestedValueEditor({
   fieldKey,
   value,
   onChange,
+  id,
 }: {
   fieldKey: string;
   value: unknown;
   onChange: (v: unknown) => void;
+  id?: string;
 }) {
+  const innerId = useId();
   if (isRecord(value)) {
     return (
       <div className="grid gap-2 border border-border p-2">
-        {Object.entries(value).map(([subKey, subVal]) => (
-          <div key={subKey} className="grid gap-1">
-            <Label className="text-xs text-muted-foreground">{subKey}</Label>
-            <NestedValueEditor
-              fieldKey={`${fieldKey}.${subKey}`}
-              value={subVal}
-              onChange={(next) => onChange({ ...value, [subKey]: next })}
-            />
-          </div>
-        ))}
+        {Object.entries(value).map(([subKey, subVal]) => {
+          const subId = `${innerId}-${subKey}`;
+          return (
+            <div key={subKey} className="grid gap-1">
+              <Label htmlFor={subId} className="text-xs text-muted-foreground">{subKey}</Label>
+              <NestedValueEditor
+                fieldKey={`${fieldKey}.${subKey}`}
+                value={subVal}
+                onChange={(next) => onChange({ ...value, [subKey]: next })}
+                id={subId}
+              />
+            </div>
+          );
+        })}
       </div>
     );
   }
@@ -57,24 +65,29 @@ function NestedValueEditor({
   if (Array.isArray(value)) {
     return (
       <div className="grid gap-2">
-        {value.map((item, index) => (
-          <div key={`${fieldKey}.${index}`} className="grid gap-1">
-            <Label className="text-xs text-muted-foreground">Item {index + 1}</Label>
-            <NestedValueEditor
-              fieldKey={`${fieldKey}.${index}`}
-              value={item}
-              onChange={(next) =>
-                onChange(value.map((existing, i) => (i === index ? next : existing)))
-              }
-            />
-          </div>
-        ))}
+        {value.map((item, index) => {
+          const itemKey = `${innerId}-${index}`;
+          return (
+            <div key={`${fieldKey}.${index}`} className="grid gap-1">
+              <Label htmlFor={itemKey} className="text-xs text-muted-foreground">Item {index + 1}</Label>
+              <NestedValueEditor
+                fieldKey={`${fieldKey}.${index}`}
+                value={item}
+                onChange={(next) =>
+                  onChange(value.map((existing, i) => (i === index ? next : existing)))
+                }
+                id={itemKey}
+              />
+            </div>
+          );
+        })}
       </div>
     );
   }
 
   return (
     <Input
+      id={id}
       value={formatScalar(value)}
       onChange={(e) => onChange(e.target.value)}
       className="text-xs"
@@ -88,6 +101,7 @@ export function AutoField({
   value,
   onChange,
 }: AutoFieldProps) {
+  const id = useId();
   const rawLabel = schemaKey.split(".").pop() ?? schemaKey;
   const label = rawLabel.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 
@@ -105,10 +119,10 @@ export function AutoField({
     return (
       <div className="flex items-center justify-between gap-4">
         <div className="flex flex-col gap-0.5">
-          <Label className="text-sm">{label}</Label>
+          <Label htmlFor={id} className="text-sm">{label}</Label>
           <FieldHint schema={schema} schemaKey={schemaKey} />
         </div>
-        <Switch checked={!!value} onCheckedChange={onChange} />
+        <Switch id={id} checked={!!value} onCheckedChange={onChange} />
       </div>
     );
   }
@@ -117,9 +131,9 @@ export function AutoField({
     const options = (schema.options as string[]) ?? [];
     return (
       <div className="grid gap-1.5">
-        <Label className="text-sm">{label}</Label>
+        <Label htmlFor={id} className="text-sm">{label}</Label>
         <FieldHint schema={schema} schemaKey={schemaKey} />
-        <Select value={String(value ?? "")} onValueChange={(v) => onChange(v)}>
+        <Select id={id} value={String(value ?? "")} onValueChange={(v) => onChange(v)}>
           {options.map((opt) => (
             <SelectOption key={opt} value={opt}>
               {opt || "(none)"}
@@ -133,9 +147,10 @@ export function AutoField({
   if (schema.type === "number") {
     return (
       <div className="grid gap-1.5">
-        <Label className="text-sm">{label}</Label>
+        <Label htmlFor={id} className="text-sm">{label}</Label>
         <FieldHint schema={schema} schemaKey={schemaKey} />
         <Input
+          id={id}
           type="number"
           value={value === undefined || value === null ? "" : String(value)}
           onChange={(e) => {
@@ -157,9 +172,10 @@ export function AutoField({
   if (schema.type === "text") {
     return (
       <div className="grid gap-1.5">
-        <Label className="text-sm">{label}</Label>
+        <Label htmlFor={id} className="text-sm">{label}</Label>
         <FieldHint schema={schema} schemaKey={schemaKey} />
         <textarea
+          id={id}
           className="flex min-h-[80px] w-full border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
           value={String(value ?? "")}
           onChange={(e) => onChange(e.target.value)}
@@ -171,9 +187,10 @@ export function AutoField({
   if (schema.type === "list") {
     return (
       <div className="grid gap-1.5">
-        <Label className="text-sm">{label}</Label>
+        <Label htmlFor={id} className="text-sm">{label}</Label>
         <FieldHint schema={schema} schemaKey={schemaKey} />
         <Input
+          id={id}
           value={Array.isArray(value) ? value.join(", ") : String(value ?? "")}
           onChange={(e) =>
             onChange(
@@ -191,9 +208,9 @@ export function AutoField({
 
   return (
     <div className="grid gap-1.5">
-      <Label className="text-sm">{label}</Label>
+      <Label htmlFor={id} className="text-sm">{label}</Label>
       <FieldHint schema={schema} schemaKey={schemaKey} />
-      <Input value={String(value ?? "")} onChange={(e) => onChange(e.target.value)} />
+      <Input id={id} value={String(value ?? "")} onChange={(e) => onChange(e.target.value)} />
     </div>
   );
 }
