@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { api } from "@/lib/api";
 import type { ActionStatusResponse } from "@/lib/api";
 import { Toast } from "@nous-research/ui/ui/components/toast";
@@ -112,18 +112,30 @@ export function SystemActionsProvider({
   const isRunning = activeAction !== null && actionStatus?.running !== false;
   const isBusy = pendingAction !== null || isRunning;
 
+  // perf: avoid re-rendering consumers on every provider render by memoizing the context value
+  const value = useMemo(
+    () => ({
+      actionStatus,
+      activeAction,
+      dismissLog,
+      isBusy,
+      isRunning,
+      pendingAction,
+      runAction,
+    }),
+    [
+      actionStatus,
+      activeAction,
+      dismissLog,
+      isBusy,
+      isRunning,
+      pendingAction,
+      runAction,
+    ],
+  );
+
   return (
-    <SystemActionsContext.Provider
-      value={{
-        actionStatus,
-        activeAction,
-        dismissLog,
-        isBusy,
-        isRunning,
-        pendingAction,
-        runAction,
-      }}
-    >
+    <SystemActionsContext.Provider value={value}>
       {children}
       <Toast toast={toast} />
     </SystemActionsContext.Provider>
