@@ -436,3 +436,27 @@ class TestHermesTimezoneYamlResolution:
         monkeypatch.setattr("hermes_time.get_config_path", lambda: config_path)
         tz_name = _resolve_timezone_name()
         assert tz_name == ""
+
+
+
+
+def test_reset_cache_behavior(monkeypatch):
+    """Test that reset_cache clears the cached timezone and reads the new one."""
+    import hermes_time
+
+    # 1. Set initial timezone
+    monkeypatch.setenv("HERMES_TIMEZONE", "UTC")
+    hermes_time.reset_cache()
+
+    tz_before = hermes_time.get_timezone()
+    assert str(tz_before) == "UTC"
+
+    # 2. Change environment
+    monkeypatch.setenv("HERMES_TIMEZONE", "Asia/Kolkata")
+
+    # 3. Call reset_cache to trigger re-resolution
+    hermes_time.reset_cache()
+
+    tz_after = hermes_time.get_timezone()
+    assert str(tz_after) == "Asia/Kolkata"
+    assert tz_before != tz_after
