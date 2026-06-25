@@ -3623,12 +3623,13 @@ class SessionDB:
         ordered by most-recently-used first.
         """
         select_with_last_active = (
-            "SELECT s.*, COALESCE(m.last_active, s.started_at) AS last_active "
+            # perf: avoid full-table GROUP BY with correlated subquery
+            "SELECT s.*, "
+            "COALESCE("
+            "  (SELECT MAX(timestamp) FROM messages WHERE session_id = s.id), "
+            "  s.started_at"
+            ") AS last_active "
             "FROM sessions s "
-            "LEFT JOIN ("
-            "SELECT session_id, MAX(timestamp) AS last_active "
-            "FROM messages GROUP BY session_id"
-            ") m ON m.session_id = s.id "
         )
         with self._lock:
             if source:
