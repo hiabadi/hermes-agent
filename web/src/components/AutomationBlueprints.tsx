@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useId } from "react";
 import { Clock, Wand2 } from "lucide-react";
 import { Button } from "@nous-research/ui/ui/components/button";
 import { Select, SelectOption } from "@nous-research/ui/ui/components/select";
@@ -30,14 +30,16 @@ function FieldInput({
   field,
   value,
   onChange,
+  id,
 }: {
   field: AutomationBlueprintField;
   value: string;
   onChange: (v: string) => void;
+  id?: string;
 }) {
   if (field.type === "enum" || field.type === "weekdays") {
     return (
-      <Select value={value} onValueChange={(v) => onChange(v)}>
+      <Select id={id} value={value} onValueChange={(v) => onChange(v)}>
         {field.options.map((opt) => (
           <SelectOption key={opt} value={opt}>
             {opt}
@@ -49,6 +51,7 @@ function FieldInput({
   if (field.type === "time") {
     return (
       <Input
+        id={id}
         type="time"
         value={value}
         onChange={(e) => onChange(e.target.value)}
@@ -58,6 +61,7 @@ function FieldInput({
   // text
   return (
     <Input
+      id={id}
       type="text"
       value={value}
       placeholder={field.help || field.label}
@@ -81,6 +85,7 @@ function BlueprintCard({
   const [values, setValues] = useState<Record<string, string>>(() => initialValues(blueprint));
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const formId = useId();
 
   const submit = useCallback(async () => {
     setSubmitting(true);
@@ -130,20 +135,25 @@ function BlueprintCard({
 
         {open && (
           <div className="space-y-3 border-t pt-3">
-            {blueprint.fields.map((f) => (
-              <div key={f.name} className="space-y-1">
-                <Label htmlFor={`${blueprint.key}-${f.name}`}>{f.label}</Label>
-                <FieldInput
-                  field={f}
-                  value={values[f.name] ?? ""}
-                  onChange={(v) => setValues((prev) => ({ ...prev, [f.name]: v }))}
-                />
-                {f.help && f.type !== "text" ? (
-                  <p className="text-xs opacity-60">{f.help}</p>
-                ) : null}
-              </div>
-            ))}
+            {blueprint.fields.map((f) => {
+              const fieldId = `${formId}-${f.name}`;
+              return (
+                <div key={f.name} className="space-y-1">
+                  <Label htmlFor={fieldId}>{f.label}</Label>
+                  <FieldInput
+                    id={fieldId}
+                    field={f}
+                    value={values[f.name] ?? ""}
+                    onChange={(v) => setValues((prev) => ({ ...prev, [f.name]: v }))}
+                  />
+                  {f.help && f.type !== "text" ? (
+                    <p className="text-xs opacity-60">{f.help}</p>
+                  ) : null}
+                </div>
+              );
+            })}
             {error ? (
+
               <p className="text-sm text-red-500" role="alert">
                 {error}
               </p>
