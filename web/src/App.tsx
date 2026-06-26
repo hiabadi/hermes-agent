@@ -4,6 +4,7 @@ import {
   useMemo,
   useRef,
   useState,
+  memo,
   type ComponentType,
   type FocusEvent,
   type MouseEvent,
@@ -806,7 +807,8 @@ function ProfileKeyedRoutes({ children }: { children: ReactNode }) {
   return <div key={profile || "__own__"} className="contents">{children}</div>;
 }
 
-function SidebarNavLink({
+// perf: avoid 17+ renders of the nav list on every route change and 10s status poll
+const SidebarNavLink = memo(function SidebarNavLink({
   closeMobile,
   collapsed,
   item,
@@ -891,7 +893,7 @@ function SidebarNavLink({
       )}
     </li>
   );
-}
+});
 
 function SidebarSystemActions({
   collapsed,
