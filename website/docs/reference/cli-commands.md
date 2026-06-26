@@ -438,7 +438,10 @@ Common flags for migration subcommands:
 | `--apply` | Rewrite `config.yaml` in-place (default: dry-run, no writes). |
 | `--no-backup` | Skip the timestamped backup of `config.yaml` when applying. |
 
-> Not to be confused with `hermes claw migrate` (one-shot import of OpenClaw configuration into Hermes) — `hermes migrate` is the top-level config-rewrite command.
+> **Disambiguation:**
+> - `hermes migrate` — Top-level config-rewrite command for retiring models/settings.
+> - `hermes config migrate` — Interactive wizard for adding newly introduced `config.yaml` and `.env` options after an update.
+> - `hermes claw migrate` — One-shot import of OpenClaw configuration into Hermes.
 
 
 ## `hermes proxy`
@@ -968,7 +971,7 @@ Subcommands:
 | `path` | Print the config file path. |
 | `env-path` | Print the `.env` file path. |
 | `check` | Check for missing or stale config. |
-| `migrate` | Add newly introduced options interactively. |
+| `migrate` | Add newly introduced options interactively. Not to be confused with `hermes migrate` (config rewrites) or `hermes claw migrate` (OpenClaw import). |
 
 ## `hermes pairing`
 
