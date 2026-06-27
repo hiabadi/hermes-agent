@@ -148,6 +148,7 @@ For native Anthropic auth, Hermes prefers Claude Code's own credential files whe
 | `CAMOFOX_ADOPT_EXISTING_TAB` | Set to `true` to reuse an existing Camofox tab before creating a new one |
 | `BROWSER_INACTIVITY_TIMEOUT` | Browser session inactivity timeout in seconds |
 | `AGENT_BROWSER_ARGS` | Extra Chromium launch flags (comma- or newline-separated). Hermes auto-injects `--no-sandbox,--disable-dev-shm-usage` when running as root or on AppArmor-restricted unprivileged user namespaces (Ubuntu 23.10+, DGX Spark, many container images); set this manually only to override or add other flags. |
+| `AGENT_BROWSER_ENGINE` | Browser engine for local mode: auto (default Chrome), lightpanda (faster, no screenshots), chrome |
 | `FAL_KEY` | Image generation ([fal.ai](https://fal.ai/)) |
 | `GROQ_API_KEY` | Groq Whisper STT API key ([groq.com](https://groq.com/)) |
 | `ELEVENLABS_API_KEY` | ElevenLabs premium TTS voices ([elevenlabs.io](https://elevenlabs.io/)) |
@@ -161,6 +162,12 @@ For native Anthropic auth, Hermes prefers Claude Code's own credential files whe
 | `HINDSIGHT_TIMEOUT` | Timeout in seconds for Hindsight memory-provider API calls (default: `60`). Bump this if your Hindsight instance is slow to respond during `/sync` or `on_session_switch` and you're seeing timeouts in `errors.log`. |
 | `SUPERMEMORY_API_KEY` | Semantic long-term memory with profile recall and session ingest ([supermemory.ai](https://supermemory.ai)) |
 | `DAYTONA_API_KEY` | Daytona cloud sandboxes ([daytona.io](https://daytona.io/)) |
+| `AIRTABLE_API_KEY` | Airtable personal access token (used by the `airtable` skill) |
+| `BRAVE_SEARCH_API_KEY` | Brave Search API subscription token (free tier: 2,000 queries/mo) |
+| `KREA_API_KEY` | Krea API key for Krea 2 image generation (Medium + Large) |
+| `LINEAR_API_KEY` | Linear personal API key (used by the `linear` skill) |
+| `NOTION_API_KEY` | Notion integration token (used by the `notion` skill) |
+| `TENOR_API_KEY` | Tenor API key for GIF search (used by the `gif-search` skill) |
 
 ### Langfuse Observability
 
@@ -262,6 +269,7 @@ For cloud sandbox backends, persistence is filesystem-oriented. `TERMINAL_LIFETI
 | `DISCORD_ALLOWED_USERS` | Comma-separated Discord user IDs allowed to use the bot |
 | `DISCORD_ALLOWED_ROLES` | Comma-separated Discord role IDs allowed to use the bot (OR with `DISCORD_ALLOWED_USERS`). Auto-enables the Members intent. Useful when moderation teams churn — role grants propagate automatically. |
 | `DISCORD_ALLOWED_CHANNELS` | Comma-separated Discord channel IDs. When set, the bot only responds in these channels (plus DMs if allowed). Overrides `config.yaml` `discord.allowed_channels`. |
+| `DISCORD_ALLOW_ALL_USERS` | Allow any Discord user to trigger the bot (dev only) |
 | `DISCORD_PROXY` | Proxy URL for Discord connections — overrides `HTTPS_PROXY`. Supports `http://`, `https://`, `socks5://` |
 | `DISCORD_HOME_CHANNEL` | Default Discord channel for cron delivery |
 | `DISCORD_HOME_CHANNEL_NAME` | Display name for the Discord home channel |
@@ -349,6 +357,8 @@ For cloud sandbox backends, persistence is filesystem-oriented. `TERMINAL_LIFETI
 | `DINGTALK_CLIENT_ID` | DingTalk bot AppKey from developer portal ([open.dingtalk.com](https://open.dingtalk.com)) |
 | `DINGTALK_CLIENT_SECRET` | DingTalk bot AppSecret from developer portal |
 | `DINGTALK_ALLOWED_USERS` | Comma-separated DingTalk user IDs allowed to message the bot |
+| `DINGTALK_HOME_CHANNEL` | Default chat/channel ID for cron delivery |
+| `DINGTALK_HOME_CHANNEL_NAME` | Display name for the home channel |
 | `FEISHU_APP_ID` | Feishu/Lark bot App ID from [open.feishu.cn](https://open.feishu.cn/) |
 | `FEISHU_APP_SECRET` | Feishu/Lark bot App Secret |
 | `FEISHU_DOMAIN` | `feishu` (China) or `lark` (international). Default: `feishu` |
@@ -359,11 +369,13 @@ For cloud sandbox backends, persistence is filesystem-oriented. `TERMINAL_LIFETI
 | `FEISHU_ALLOW_BOTS` | `none` (default) / `mentions` / `all` — accept inbound messages from other bots. See [bot-to-bot messaging](../user-guide/messaging/feishu.md#bot-to-bot-messaging) |
 | `FEISHU_REQUIRE_MENTION` | `true` (default) / `false` — whether group messages must @mention the bot. Override per-chat via `group_rules.<chat_id>.require_mention`. |
 | `FEISHU_HOME_CHANNEL` | Feishu chat ID for cron delivery and notifications |
+| `FEISHU_HOME_CHANNEL_NAME` | Display name for the home channel |
 | `WECOM_BOT_ID` | WeCom AI Bot ID from admin console |
 | `WECOM_SECRET` | WeCom AI Bot secret |
 | `WECOM_WEBSOCKET_URL` | Custom WebSocket URL (default: `wss://openws.work.weixin.qq.com`) |
 | `WECOM_ALLOWED_USERS` | Comma-separated WeCom user IDs allowed to message the bot |
 | `WECOM_HOME_CHANNEL` | WeCom chat ID for cron delivery and notifications |
+| `WECOM_HOME_CHANNEL_NAME` | Display name for the home channel |
 | `WECOM_CALLBACK_CORP_ID` | WeCom enterprise Corp ID for callback self-built app |
 | `WECOM_CALLBACK_CORP_SECRET` | Corp secret for the self-built app |
 | `WECOM_CALLBACK_AGENT_ID` | Agent ID of the self-built app |
@@ -389,8 +401,52 @@ For cloud sandbox backends, persistence is filesystem-oriented. `TERMINAL_LIFETI
 | `BLUEBUBBLES_WEBHOOK_HOST` | Webhook listener bind address (default: `127.0.0.1`) |
 | `BLUEBUBBLES_WEBHOOK_PORT` | Webhook listener port (default: `8645`) |
 | `BLUEBUBBLES_HOME_CHANNEL` | Phone/email for cron/notification delivery |
+| `BLUEBUBBLES_HOME_CHANNEL_NAME` | Display name for the home channel |
 | `BLUEBUBBLES_ALLOWED_USERS` | Comma-separated authorized users |
 | `BLUEBUBBLES_ALLOW_ALL_USERS` | Allow all users (`true`/`false`) |
+| `YUANBAO_HOME_CHANNEL` | Default chat/channel ID for cron delivery |
+| `YUANBAO_HOME_CHANNEL_NAME` | Display name for the home channel |
+| `SIMPLEX_ALLOWED_USERS` | Comma-separated SimpleX contact IDs allowed to talk to the bot |
+| `SIMPLEX_ALLOW_ALL_USERS` | Allow any contact to talk to the bot (dev only — disables allowlist) |
+| `SIMPLEX_AUTO_ACCEPT` | Auto-accept incoming contact requests (default: true) |
+| `SIMPLEX_GROUP_ALLOWED` | Comma-separated SimpleX group IDs the bot should participate in, or '*' to allow any group. Omit to ignore group messages entirely (safer default — a bot in a group otherwise processes every member's traffic). |
+| `SIMPLEX_HOME_CHANNEL` | Default contact/group ID for cron / notification delivery |
+| `SIMPLEX_HOME_CHANNEL_NAME` | Human label for the home channel (defaults to the ID) |
+| `SIMPLEX_WS_URL` | WebSocket URL of the simplex-chat daemon (e.g. ws://127.0.0.1:5225) |
+| `PHOTON_ALLOWED_USERS` | Comma-separated E.164 phone numbers allowed to talk to the bot |
+| `PHOTON_ALLOW_ALL_USERS` | Allow any sender to trigger the bot (dev only — disables allowlist) |
+| `PHOTON_DASHBOARD_HOST` | Photon Dashboard API host (default https://app.photon.codes) |
+| `PHOTON_HOME_CHANNEL` | Default Photon target for cron / notification delivery: Spectrum space id, DM GUID, or bare E.164 phone number |
+| `PHOTON_HOME_CHANNEL_NAME` | Human label for the home channel |
+| `PHOTON_MARKDOWN` | Send agent replies as markdown — iMessage renders it natively, other Spectrum platforms degrade to plain text (true/false, default true) |
+| `PHOTON_MENTION_PATTERNS` | Mention wake-word regexes for group chats (JSON list or comma/newline-separated; defaults to Hermes wake words) |
+| `PHOTON_NODE_BIN` | Path to the node binary (default: shutil.which('node')) |
+| `PHOTON_PROJECT_ID` | Spectrum project id (the project's spectrumProjectId; set by `hermes photon setup`) |
+| `PHOTON_PROJECT_SECRET` | Project secret paired with the Spectrum project id (set by `hermes photon setup`) |
+| `PHOTON_REACTIONS` | Tapback 👀/👍/👎 on messages as processing status and route tapbacks on bot messages to the agent (true/false, default false) |
+| `PHOTON_REQUIRE_MENTION` | Ignore group-chat messages unless they match a mention wake word (true/false, default false) |
+| `PHOTON_SIDECAR_AUTOSTART` | Spawn the Node sidecar on connect (true/false, default true) |
+| `PHOTON_SIDECAR_PORT` | Loopback port for the Node sidecar control + inbound channel (default 8789) |
+| `PHOTON_SPECTRUM_HOST` | Photon Spectrum API host (default https://spectrum.photon.codes) |
+| `PHOTON_TELEMETRY` | Enable Spectrum SDK telemetry in the sidecar (true/false, default false; toggle with `hermes photon telemetry on|off`) |
+| `IRC_ALLOWED_USERS` | Comma-separated IRC nicks allowed to talk to the bot |
+| `IRC_ALLOW_ALL_USERS` | Allow anyone in the channel to talk to the bot (dev only) |
+| `IRC_CHANNEL` | IRC channel to join (e.g. #hermes) |
+| `IRC_HOME_CHANNEL` | Channel for cron / notification delivery (defaults to IRC_CHANNEL) |
+| `IRC_NICKNAME` | Bot nickname on IRC (default: hermes-bot) |
+| `IRC_NICKSERV_PASSWORD` | NickServ password for nick identification |
+| `IRC_PORT` | IRC server port (default: 6697 with TLS, 6667 without) |
+| `IRC_SERVER` | IRC server hostname (e.g. irc.libera.chat) |
+| `IRC_SERVER_PASSWORD` | IRC server password (if required) |
+| `IRC_USE_TLS` | Use TLS for the IRC connection (1/true/yes to enable, default: true on port 6697) |
+| `TEAMS_ALLOWED_USERS` | Comma-separated Teams user IDs / UPNs allowed to talk to the bot |
+| `TEAMS_ALLOW_ALL_USERS` | Allow any Teams user to trigger the bot (dev only) |
+| `TEAMS_CLIENT_ID` | Azure AD application (Bot Framework) client ID |
+| `TEAMS_CLIENT_SECRET` | Azure AD application client secret |
+| `TEAMS_HOME_CHANNEL` | Default chat/channel ID for cron / notification delivery |
+| `TEAMS_HOME_CHANNEL_NAME` | Display name for the Teams home channel |
+| `TEAMS_PORT` | Webhook listen port (Bot Framework default: 3978) |
+| `TEAMS_TENANT_ID` | Azure AD tenant ID hosting the bot application |
 | `QQ_APP_ID` | QQ Bot App ID from [q.qq.com](https://q.qq.com) |
 | `QQ_CLIENT_SECRET` | QQ Bot App Secret from [q.qq.com](https://q.qq.com) |
 | `QQ_STT_API_KEY` | API key for external STT fallback provider (optional, used when QQ built-in ASR returns no text) |
@@ -399,12 +455,19 @@ For cloud sandbox backends, persistence is filesystem-oriented. `TERMINAL_LIFETI
 | `QQ_ALLOWED_USERS` | Comma-separated QQ user openIDs allowed to message the bot |
 | `QQ_GROUP_ALLOWED_USERS` | Comma-separated QQ group IDs for group @-message access |
 | `QQ_ALLOW_ALL_USERS` | Allow all users (`true`/`false`, overrides `QQ_ALLOWED_USERS`) |
+| `QQ_HOME_CHANNEL` | Default chat/channel ID for cron delivery |
+| `QQ_HOME_CHANNEL_NAME` | Display name for the home channel |
+| `QQ_MARKDOWN_SUPPORT` | Legacy / undocumented |
+| `QQ_SANDBOX` | Enable QQ sandbox mode for development testing (true/false) |
 | `QQBOT_HOME_CHANNEL` | QQ user/group openID for cron delivery and notifications |
 | `QQBOT_HOME_CHANNEL_NAME` | Display name for the QQ home channel |
 | `QQ_PORTAL_HOST` | Override the QQ portal host (set to `sandbox.q.qq.com` to route through the sandbox gateway; default: `q.qq.com`). |
 | `MATTERMOST_URL` | Mattermost server URL (e.g. `https://mm.example.com`) |
 | `MATTERMOST_TOKEN` | Bot token or personal access token for Mattermost |
 | `MATTERMOST_ALLOWED_USERS` | Comma-separated Mattermost user IDs allowed to message the bot |
+| `MATTERMOST_ALLOWED_CHANNELS` | If set, the bot only responds in these channels (whitelist). |
+| `MATTERMOST_ALLOW_ALL_USERS` | Allow any Mattermost user to trigger the bot (dev only) |
+| `MATTERMOST_HOME_CHANNEL_NAME` | Display name for the home channel |
 | `MATTERMOST_HOME_CHANNEL` | Channel ID for proactive message delivery (cron, notifications) |
 | `MATTERMOST_REQUIRE_MENTION` | Require `@mention` in channels (default: `true`). Set to `false` to respond to all messages. |
 | `MATTERMOST_FREE_RESPONSE_CHANNELS` | Comma-separated channel IDs where bot responds without `@mention` |
@@ -433,6 +496,7 @@ For cloud sandbox backends, persistence is filesystem-oriented. `TERMINAL_LIFETI
 | `MATRIX_ALLOW_ROOM_MENTIONS` | Allow outbound `@room` mentions to notify all room members (default: `false`) |
 | `MATRIX_AUTO_THREAD` | Auto-create threads for room messages (default: `true`) |
 | `MATRIX_DM_MENTION_THREADS` | Create a thread when bot is `@mentioned` in a DM (default: `false`) |
+| `MATRIX_DM_AUTO_THREAD` | Auto-create threads for DM messages in Matrix (default: false) |
 | `MATRIX_APPROVAL_REQUIRE_SENDER` | Require approval/model-picker reactions to come from the original requester when known (default: `true`) |
 | `MATRIX_APPROVAL_TIMEOUT_SECONDS` | Timeout for Matrix reaction approval/model-picker prompts (default: `300`) |
 | `MATRIX_ALLOW_PUBLIC_ROOMS` | Allow Matrix room-creation tools to create public rooms (default: `false`) |
@@ -573,6 +637,7 @@ Advanced per-platform knobs for throttling the outbound message batcher. Most us
 | `HERMES_FEISHU_MEDIA_BATCH_DELAY_SECONDS` | Feishu media flush delay. |
 | `HERMES_FEISHU_DEDUP_CACHE_SIZE` | Size of the Feishu webhook dedup cache (default: `1024`). |
 | `HERMES_WECOM_TEXT_BATCH_DELAY_SECONDS` / `_SPLIT_DELAY_SECONDS` | WeCom batcher tuning. |
+| `HERMES_SIMPLEX_TEXT_BATCH_DELAY` | Quiet-period seconds (default: 0.8) used to concatenate rapid-fire inbound text messages into a single MessageEvent — same pattern as Telegram's text batching. |
 | `HERMES_VISION_DOWNLOAD_TIMEOUT` | Timeout in seconds for downloading an image before handing it to vision models (default: `30`). |
 | `HERMES_RESTART_DRAIN_TIMEOUT` | Gateway: seconds to wait for active runs to drain on `/restart` before forcing the restart (default: `900`). |
 | `HERMES_GATEWAY_PLATFORM_CONNECT_TIMEOUT` | Per-platform connect timeout during gateway startup (seconds). |
