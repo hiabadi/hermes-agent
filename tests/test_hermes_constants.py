@@ -352,3 +352,94 @@ class TestSecureParentDir:
         assert len(called_with) == 1
         assert called_with[0] == (str(real_dir), 0o700)
 
+
+
+class TestGetPackagedDataDir:
+    def test_found(self, monkeypatch, tmp_path):
+        import sysconfig
+        from hermes_constants import _get_packaged_data_dir
+
+        data_dir = tmp_path / "data_scheme"
+        data_dir.mkdir()
+        target_dir = data_dir / "my-pkg"
+        target_dir.mkdir()
+
+        def mock_get_path(scheme):
+            if scheme == "data":
+                return str(data_dir)
+            return None
+
+        monkeypatch.setattr(sysconfig, "get_path", mock_get_path)
+        assert _get_packaged_data_dir("my-pkg") == target_dir
+
+    def test_not_found(self, monkeypatch, tmp_path):
+        import sysconfig
+        from hermes_constants import _get_packaged_data_dir
+
+        def mock_get_path(scheme):
+            return str(tmp_path / scheme)
+
+        monkeypatch.setattr(sysconfig, "get_path", mock_get_path)
+        assert _get_packaged_data_dir("my-pkg") is None
+
+
+class TestGetOptionalSkillsDir:
+    def test_env_override(self, monkeypatch, tmp_path):
+        from hermes_constants import get_optional_skills_dir
+        override = tmp_path / "override"
+        monkeypatch.setenv("HERMES_OPTIONAL_SKILLS", str(override))
+        assert get_optional_skills_dir() == override
+
+    def test_packaged_data_dir(self, monkeypatch, tmp_path):
+        import hermes_constants
+        from hermes_constants import get_optional_skills_dir
+
+        pkg_dir = tmp_path / "pkg"
+        monkeypatch.setattr(hermes_constants, "_get_packaged_data_dir", lambda name: pkg_dir if name == "optional-skills" else None)
+        assert get_optional_skills_dir() == pkg_dir
+
+    def test_default_fallback(self, monkeypatch, tmp_path):
+        import hermes_constants
+        from hermes_constants import get_optional_skills_dir
+
+        monkeypatch.setattr(hermes_constants, "_get_packaged_data_dir", lambda name: None)
+        assert get_optional_skills_dir(default=tmp_path / "default") == tmp_path / "default"
+
+    def test_hermes_home_fallback(self, monkeypatch, tmp_path):
+        import hermes_constants
+        from hermes_constants import get_optional_skills_dir
+
+        monkeypatch.setattr(hermes_constants, "_get_packaged_data_dir", lambda name: None)
+        monkeypatch.setattr(hermes_constants, "get_hermes_home", lambda: tmp_path / "home")
+        assert get_optional_skills_dir() == tmp_path / "home" / "optional-skills"
+
+
+class TestGetOptionalMcpsDir:
+    def test_env_override(self, monkeypatch, tmp_path):
+        from hermes_constants import get_optional_mcps_dir
+        override = tmp_path / "override"
+        monkeypatch.setenv("HERMES_OPTIONAL_MCPS", str(override))
+        assert get_optional_mcps_dir() == override
+
+    def test_packaged_data_dir(self, monkeypatch, tmp_path):
+        import hermes_constants
+        from hermes_constants import get_optional_mcps_dir
+
+        pkg_dir = tmp_path / "pkg"
+        monkeypatch.setattr(hermes_constants, "_get_packaged_data_dir", lambda name: pkg_dir if name == "optional-mcps" else None)
+        assert get_optional_mcps_dir() == pkg_dir
+
+    def test_default_fallback(self, monkeypatch, tmp_path):
+        import hermes_constants
+        from hermes_constants import get_optional_mcps_dir
+
+        monkeypatch.setattr(hermes_constants, "_get_packaged_data_dir", lambda name: None)
+        assert get_optional_mcps_dir(default=tmp_path / "default") == tmp_path / "default"
+
+    def test_hermes_home_fallback(self, monkeypatch, tmp_path):
+        import hermes_constants
+        from hermes_constants import get_optional_mcps_dir
+
+        monkeypatch.setattr(hermes_constants, "_get_packaged_data_dir", lambda name: None)
+        monkeypatch.setattr(hermes_constants, "get_hermes_home", lambda: tmp_path / "home")
+        assert get_optional_mcps_dir() == tmp_path / "home" / "optional-mcps"
