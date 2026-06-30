@@ -1,4 +1,5 @@
 import {
+  memo,
   useCallback,
   useEffect,
   useMemo,
@@ -806,7 +807,7 @@ function ProfileKeyedRoutes({ children }: { children: ReactNode }) {
   return <div key={profile || "__own__"} className="contents">{children}</div>;
 }
 
-function SidebarNavLink({
+const SidebarNavLink = memo(function SidebarNavLink({
   closeMobile,
   collapsed,
   item,
@@ -891,9 +892,9 @@ function SidebarNavLink({
       )}
     </li>
   );
-}
+});
 
-function SidebarSystemActions({
+const SidebarSystemActions = memo(function SidebarSystemActions({
   collapsed,
   onNavigate,
   status,
@@ -905,31 +906,36 @@ function SidebarSystemActions({
     useSystemActions();
   const canUpdateHermes = status?.can_update_hermes === true;
 
-  const items: SystemActionItem[] = [
-    {
-      action: "restart",
-      icon: RotateCw,
-      label: t.status.restartGateway,
-      runningLabel: t.status.restartingGateway,
-      spin: true,
-    },
-  ];
-  if (canUpdateHermes) {
-    items.push({
-      action: "update",
-      icon: Download,
-      label: t.status.updateHermes,
-      runningLabel: t.status.updatingHermes,
-      spin: false,
-    });
-  }
+  // perf: useMemo for referential stability of items array to avoid re-rendering SystemActionButton
+  const items: SystemActionItem[] = useMemo(() => {
+    const arr: SystemActionItem[] = [
+      {
+        action: "restart",
+        icon: RotateCw,
+        label: t.status.restartGateway,
+        runningLabel: t.status.restartingGateway,
+        spin: true,
+      },
+    ];
+    if (canUpdateHermes) {
+      arr.push({
+        action: "update",
+        icon: Download,
+        label: t.status.updateHermes,
+        runningLabel: t.status.updatingHermes,
+        spin: false,
+      });
+    }
+    return arr;
+  }, [t.status.restartGateway, t.status.restartingGateway, t.status.updateHermes, t.status.updatingHermes, canUpdateHermes]);
 
-  const handleClick = (action: SystemAction) => {
+  // perf: useCallback for click handler
+  const handleClick = useCallback((action: SystemAction) => {
     if (isBusy) return;
     void runAction(action);
     navigate("/sessions");
     onNavigate();
-  };
+  }, [isBusy, runAction, navigate, onNavigate]);
 
   return (
     <div
@@ -965,15 +971,15 @@ function SidebarSystemActions({
             isPending={pendingAction === item.action}
             isRunning={activeAction === item.action && isRunning && pendingAction !== item.action}
             item={item}
-            onClick={() => handleClick(item.action)}
+            onClick={handleClick}
           />
         ))}
       </ul>
     </div>
   );
-}
+});
 
-function SystemActionButton({
+const SystemActionButton = memo(function SystemActionButton({
   collapsed,
   disabled,
   isPending,
@@ -1002,7 +1008,7 @@ function SystemActionButton({
       onMouseLeave={collapsed ? hideTooltip : undefined}
     >
       <button
-        onClick={onClick}
+        onClick={() => onClick(item.action)}
         disabled={disabled}
         aria-busy={busy}
         aria-label={collapsed ? displayLabel : undefined}
@@ -1060,7 +1066,7 @@ function SystemActionButton({
       )}
     </li>
   );
-}
+});
 
 function SidebarIconWithTooltip({
   children,
@@ -1104,7 +1110,7 @@ function SidebarIconWithTooltip({
   );
 }
 
-function GatewayDot({ collapsed, status, tooltipWarmRef }: GatewayDotProps) {
+const GatewayDot = memo(function GatewayDot({ collapsed, status, tooltipWarmRef }: GatewayDotProps) {
   const { t } = useI18n();
   const [hovered, setHovered] = useState(false);
   const [tooltipAnchor, setTooltipAnchor] = useState<HTMLElement | null>(null);
@@ -1160,7 +1166,7 @@ function GatewayDot({ collapsed, status, tooltipWarmRef }: GatewayDotProps) {
       )}
     </div>
   );
-}
+});
 
 function SidebarTooltip({ anchor, label, warmRef }: SidebarTooltipProps) {
   const rect = anchor.getBoundingClientRect();
@@ -1252,7 +1258,7 @@ interface SystemActionButtonProps {
   isPending: boolean;
   isRunning: boolean;
   item: SystemActionItem;
-  onClick: () => void;
+  onClick: (action: SystemAction) => void;
   tooltipWarmRef: TooltipWarmRef;
 }
 
