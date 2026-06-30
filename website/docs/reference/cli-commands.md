@@ -20,6 +20,12 @@ hermes [global-options] <command> [subcommand/options]
 
 | Option | Description |
 |--------|-------------|
+| `--model <model>`, `-m <model>` | Override the model for this invocation (e.g. anthropic/claude-sonnet-4.6). Applies to `-z`/`--oneshot` and `--tui`. Also settable via `HERMES_INFERENCE_MODEL`. |
+| `--provider <provider>` | Override the inference provider for this invocation (e.g. openrouter, anthropic). |
+| `--toolsets <toolsets>`, `-t <toolsets>` | Comma-separated toolsets to enable for this invocation. |
+| `--skills <skills>`, `-s <skills>` | Preload one or more skills for the session (repeat flag or comma-separate). |
+| `--accept-hooks` | Auto-approve any unseen shell hooks declared in `config.yaml` without a TTY prompt. Equivalent to `HERMES_ACCEPT_HOOKS=1` or `hooks_auto_accept: true` in `config.yaml`. |
+| `--safe-mode` | Troubleshooting mode: disable ALL customizations — user config, `AGENTS.md`/memory injection, plugins, and MCP servers (implies `--ignore-user-config` and `--ignore-rules`). |
 | `--version`, `-V` | Show version and exit. |
 | `--profile <name>`, `-p <name>` | Select which Hermes profile to use for this invocation. Overrides the sticky default set by `hermes profile use`. |
 | `--resume <session>`, `-r <session>` | Resume a previous session by ID or title. |
