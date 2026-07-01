@@ -4474,6 +4474,45 @@ def test_reclaim_task_clears_failure_counter(kanban_home):
         conn.close()
 
 
+
+def test_detect_crashed_workers_rate_limited(kanban_home, monkeypatch):
+    """A worker that exits with KANBAN_RATE_LIMIT_EXIT_CODE is returned to ready
+    state without incrementing the failure counter, and marked with a quota error.
+    """
+    import hermes_cli.kanban_db as kb
+    conn = kb.connect()
+    try:
+        tid = kb.create_task(conn, title="quota_test", assignee="worker")
+        host_prefix = kb._claimer_id().split(":", 1)[0]
+        lock = f"{host_prefix}:mock"
+        kb.claim_task(conn, tid, claimer=lock)
+        fake_pid = 999997
+        kb._set_worker_pid(conn, tid, fake_pid)
+
+        # Simulate the reap loop having recorded a EX_TEMPFAIL (75) exit for this pid.
+        import os
+        # Wait status is shifted; simulate os.W_EXITCODE
+        kb._record_worker_exit(fake_pid, kb.KANBAN_RATE_LIMIT_EXIT_CODE << 8)
+
+        # Force liveness check to say "dead" for the fake pid.
+        monkeypatch.setattr(kb, "_pid_alive", lambda p: False)
+
+        result_crashed = kb.detect_crashed_workers(conn)
+
+        # Rate-limited tasks are NOT returned in the crashed list.
+        assert tid not in result_crashed
+        # But they ARE tracked in the private attribute for logging.
+        assert tid in getattr(kb.detect_crashed_workers, '_last_rate_limited', [])
+
+        task = kb.get_task(conn, tid)
+        # Requeued to ready without a failure count increment.
+        assert task.status == "ready"
+        assert task.consecutive_failures == 0
+        assert task.last_failure_error is not None
+        assert "rate-limited" in task.last_failure_error
+    finally:
+        conn.close()
+
 def test_dispatch_once_integrates_stale_detection(kanban_home, monkeypatch):
     """dispatch_once with stale_timeout_seconds reclaims stale running tasks."""
     import hermes_cli.kanban_db as _kb
