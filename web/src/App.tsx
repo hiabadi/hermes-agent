@@ -1,4 +1,5 @@
 import {
+  memo,
   useCallback,
   useEffect,
   useMemo,
@@ -806,7 +807,8 @@ function ProfileKeyedRoutes({ children }: { children: ReactNode }) {
   return <div key={profile || "__own__"} className="contents">{children}</div>;
 }
 
-function SidebarNavLink({
+// perf: avoid cascading re-renders by memoizing children of frequently re-rendered App component
+const SidebarNavLink = memo(function SidebarNavLink({
   closeMobile,
   collapsed,
   item,
@@ -891,9 +893,10 @@ function SidebarNavLink({
       )}
     </li>
   );
-}
+});
 
-function SidebarSystemActions({
+// perf: avoid cascading re-renders by memoizing children of frequently re-rendered App component
+const SidebarSystemActions = memo(function SidebarSystemActions({
   collapsed,
   onNavigate,
   status,
@@ -971,7 +974,7 @@ function SidebarSystemActions({
       </ul>
     </div>
   );
-}
+});
 
 function SystemActionButton({
   collapsed,
