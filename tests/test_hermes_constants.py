@@ -280,6 +280,22 @@ class TestSecureParentDir:
         assert len(called_with) == 1
         assert called_with[0] == (str(safe_dir), 0o700)
 
+
+    def test_safe_path_calls_chmod_swallows_oserror(self, tmp_path, monkeypatch):
+        """If os.chmod raises OSError (e.g. read-only filesystem), it is swallowed."""
+        safe_dir = tmp_path / "home" / "user" / ".hermes"
+        safe_dir.mkdir(parents=True)
+        target = safe_dir / "auth.json"
+        target.touch()
+
+        def raise_oserror(path, mode):
+            raise OSError("Read-only file system")
+
+        monkeypatch.setattr(os, "chmod", raise_oserror)
+
+        # Should not raise
+        secure_parent_dir(target)
+
     def test_root_dir_skipped(self, monkeypatch):
         """Parent resolving to / must NOT be chmod'd."""
         called_with = []
