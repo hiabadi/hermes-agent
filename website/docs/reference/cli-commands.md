@@ -225,6 +225,7 @@ Subcommands:
 | `install` | Install as a systemd (Linux) or launchd (macOS) background service. |
 | `uninstall` | Remove the installed service. |
 | `setup` | Interactive messaging-platform setup. |
+| `enroll` | Enroll this gateway with a relay connector (writes relay auth creds to .env). Requires being logged in (`hermes setup`). |
 
 Options:
 
