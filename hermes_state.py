@@ -3622,13 +3622,10 @@ class SessionDB:
         message timestamp for the session, falling back to ``started_at``),
         ordered by most-recently-used first.
         """
+        # perf: avoid full table GROUP BY — correlated subquery uses index lookups on idx_messages_session
         select_with_last_active = (
-            "SELECT s.*, COALESCE(m.last_active, s.started_at) AS last_active "
+            "SELECT s.*, COALESCE((SELECT MAX(timestamp) FROM messages m WHERE m.session_id = s.id), s.started_at) AS last_active "
             "FROM sessions s "
-            "LEFT JOIN ("
-            "SELECT session_id, MAX(timestamp) AS last_active "
-            "FROM messages GROUP BY session_id"
-            ") m ON m.session_id = s.id "
         )
         with self._lock:
             if source:
